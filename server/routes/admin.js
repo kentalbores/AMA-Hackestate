@@ -150,6 +150,28 @@ router.put('/verify-buyer/:id', authenticateToken, isAdmin, (req, res) => {
   }
 });
 
+// Verify property
+router.put('/verify-property/:id', authenticateToken, isAdmin, (req, res) => {
+  try {
+    const propertyId = req.params.id;
+    
+    // Check if property exists
+    const property = db.prepare('SELECT id FROM properties WHERE id = ?').get(propertyId);
+    
+    if (!property) {
+      return res.status(404).json({ error: 'Property not found' });
+    }
+    
+    // Update property verification status
+    db.prepare('UPDATE properties SET is_verified = ? WHERE id = ?').run('true', propertyId);
+    
+    res.json({ message: 'Property verified successfully' });
+  } catch (error) {
+    console.error('Error verifying property:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // Get all files
 router.get('/files', authenticateToken, isAdmin, (req, res) => {
   try {
@@ -162,6 +184,24 @@ router.get('/files', authenticateToken, isAdmin, (req, res) => {
     res.json(files);
   } catch (error) {
     console.error('Error fetching files:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Get all pending property verifications
+router.get('/pending-properties', authenticateToken, isAdmin, (req, res) => {
+  try {
+    const stmt = db.prepare(`
+      SELECT p.id, p.title, p.price, p.location, p.is_verified, a.id as agent_id, u.name as agent_name
+      FROM properties p
+      JOIN agents a ON p.agents_id = a.id
+      JOIN users u ON a.users_id = u.id
+      WHERE p.is_verified = ?
+    `);
+    const pendingProperties = stmt.all('false');
+    res.json(pendingProperties);
+  } catch (error) {
+    console.error('Error fetching pending properties:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });

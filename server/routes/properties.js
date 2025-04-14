@@ -6,6 +6,7 @@ const db = require('../db/database');
 const axios = require("axios");
 require("dotenv").config();
 const { authenticateToken } = require('../middleware/auth');
+const jwt = require('jsonwebtoken');
 
 const storage = multer.diskStorage({
     destination: 'uploads/',
@@ -70,8 +71,35 @@ router.post('/', upload.single('image'), (req, res) => {
 
 router.get('/', (req, res) => {
   try {
-    const stmt = db.prepare('SELECT * FROM properties');
-    const properties = stmt.all();
+    // Check if the request is from an admin
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    let includeUnverified = false;
+    
+    if (token) {
+      try {
+        const user = jwt.verify(token, process.env.JWT_SECRET);
+        const userStmt = db.prepare('SELECT role FROM users WHERE id = ?');
+        const userRole = userStmt.get(user.userId);
+        
+        if (userRole && userRole.role === 'admin') {
+          includeUnverified = true;
+        }
+      } catch (error) {
+        // Invalid token, continue with default behavior
+      }
+    }
+    
+    let stmt;
+    if (includeUnverified) {
+      // Admin can see all properties
+      stmt = db.prepare('SELECT * FROM properties');
+    } else {
+      // Regular users can only see verified properties
+      stmt = db.prepare('SELECT * FROM properties WHERE is_verified = ?');
+    }
+    
+    const properties = includeUnverified ? stmt.all() : stmt.all('true');
     res.json(properties);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch properties' });
@@ -227,5 +255,239 @@ const handlePurchase = (req, res) => {
 
 // Then use it in the route
 router.post('/:id/purchase', authenticateToken, handlePurchase);
+
+// Route for agents to add properties
+router.post('/agent/add', authenticateToken, upload.single('image'), async (req, res) => {
+  try {
+    // Check if user is an agent
+    const userStmt = db.prepare('SELECT role FROM users WHERE id = ?');
+    const user = userStmt.get(req.user.userId);
+    
+    if (!user || user.role !== 'agent') {
+      return res.status(403).json({ error: 'Only agents can add properties' });
+    }
+    
+    // Get agent ID
+    const agentStmt = db.prepare('SELECT id FROM agents WHERE users_id = ?');
+    const agent = agentStmt.get(req.user.userId);
+    
+    if (!agent) {
+      return res.status(404).json({ error: 'Agent profile not found' });
+    }
+    
+    const { 
+      title, 
+      description,
+      price, 
+      location,
+      beds,
+      baths,
+      property_type,
+      land_area,
+      listing_type
+    } = req.body;
+    
+    const imagePath = req.file ? `/uploads/${req.file.filename}` : null;
+  
+    const stmt = db.prepare(`
+      INSERT INTO properties (
+        title, 
+        description,
+        price, 
+        location, 
+        image_url,
+        beds,
+        baths,
+        property_type,
+        land_area,
+        listing_type,
+        agents_id,
+        is_verified
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+    
+    const result = stmt.run(
+      title,
+      description,
+      price,
+      location,
+      imagePath,
+      beds,
+      baths,
+      property_type,
+      land_area,
+      listing_type,
+      agent.id,
+      'false' // Set is_verified to false by default
+    );
+    
+    res.status(201).json({ 
+      id: result.lastInsertRowid, 
+      image_url: imagePath,
+      message: 'Property added successfully and pending verification'
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to create property' });
+  }
+});
+
+// Route for agents to get their own properties
+router.get('/agent/my-properties', authenticateToken, async (req, res) => {
+  try {
+    // Check if user is an agent
+    const userStmt = db.prepare('SELECT role FROM users WHERE id = ?');
+    const user = userStmt.get(req.user.userId);
+    
+    if (!user || user.role !== 'agent') {
+      return res.status(403).json({ error: 'Only agents can access this route' });
+    }
+    
+    // Get agent ID
+    const agentStmt = db.prepare('SELECT id FROM agents WHERE users_id = ?');
+    const agent = agentStmt.get(req.user.userId);
+    
+    if (!agent) {
+      return res.status(404).json({ error: 'Agent profile not found' });
+    }
+    
+    // Get agent's properties
+    const propertiesStmt = db.prepare('SELECT * FROM properties WHERE agents_id = ?');
+    const properties = propertiesStmt.all(agent.id);
+    
+    res.json(properties);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch properties' });
+  }
+});
+
+// Route for agents to update their own properties
+router.put('/agent/:id', authenticateToken, upload.single('image'), async (req, res) => {
+  try {
+    // Check if user is an agent
+    const userStmt = db.prepare('SELECT role FROM users WHERE id = ?');
+    const user = userStmt.get(req.user.userId);
+    
+    if (!user || user.role !== 'agent') {
+      return res.status(403).json({ error: 'Only agents can update properties' });
+    }
+    
+    // Get agent ID
+    const agentStmt = db.prepare('SELECT id FROM agents WHERE users_id = ?');
+    const agent = agentStmt.get(req.user.userId);
+    
+    if (!agent) {
+      return res.status(404).json({ error: 'Agent profile not found' });
+    }
+    
+    // Check if property belongs to the agent
+    const propertyStmt = db.prepare('SELECT * FROM properties WHERE id = ? AND agents_id = ?');
+    const property = propertyStmt.get(req.params.id, agent.id);
+    
+    if (!property) {
+      return res.status(404).json({ error: 'Property not found or you do not have permission to update it' });
+    }
+    
+    const { 
+      title, 
+      description,
+      price, 
+      location, 
+      beds,
+      baths,
+      property_type,
+      land_area,
+      listing_type
+    } = req.body;
+    
+    const imagePath = req.file ? `/uploads/${req.file.filename}` : property.image_url;
+  
+    const updateStmt = db.prepare(`
+      UPDATE properties
+      SET title = ?, 
+          description = ?,
+          price = ?, 
+          location = ?, 
+          image_url = ?,
+          beds = ?,
+          baths = ?,
+          property_type = ?,
+          land_area = ?,
+          listing_type = ?
+      WHERE id = ? AND agents_id = ?
+    `);
+    
+    const result = updateStmt.run(
+      title,
+      description,
+      price,
+      location,
+      imagePath,
+      beds,
+      baths,
+      property_type,
+      land_area,
+      listing_type,
+      req.params.id,
+      agent.id
+    );
+    
+    if (result.changes === 0) {
+      return res.status(404).json({ error: 'Property not found or you do not have permission to update it' });
+    }
+    
+    res.json({ 
+      message: 'Property updated successfully',
+      image_url: imagePath
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to update property' });
+  }
+});
+
+// Route for agents to delete their own properties
+router.delete('/agent/:id', authenticateToken, async (req, res) => {
+  try {
+    // Check if user is an agent
+    const userStmt = db.prepare('SELECT role FROM users WHERE id = ?');
+    const user = userStmt.get(req.user.userId);
+    
+    if (!user || user.role !== 'agent') {
+      return res.status(403).json({ error: 'Only agents can delete properties' });
+    }
+    
+    // Get agent ID
+    const agentStmt = db.prepare('SELECT id FROM agents WHERE users_id = ?');
+    const agent = agentStmt.get(req.user.userId);
+    
+    if (!agent) {
+      return res.status(404).json({ error: 'Agent profile not found' });
+    }
+    
+    // Check if property belongs to the agent
+    const propertyStmt = db.prepare('SELECT * FROM properties WHERE id = ? AND agents_id = ?');
+    const property = propertyStmt.get(req.params.id, agent.id);
+    
+    if (!property) {
+      return res.status(404).json({ error: 'Property not found or you do not have permission to delete it' });
+    }
+    
+    // Delete the property
+    const deleteStmt = db.prepare('DELETE FROM properties WHERE id = ? AND agents_id = ?');
+    const result = deleteStmt.run(req.params.id, agent.id);
+    
+    if (result.changes === 0) {
+      return res.status(404).json({ error: 'Property not found or you do not have permission to delete it' });
+    }
+    
+    res.json({ message: 'Property deleted successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to delete property' });
+  }
+});
 
 module.exports = router;
