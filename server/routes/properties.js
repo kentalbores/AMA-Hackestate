@@ -5,6 +5,7 @@ const router = express.Router();
 const db = require('../db/database');
 const axios = require("axios");
 require("dotenv").config();
+const { authenticateToken } = require('../middleware/auth');
 
 const storage = multer.diskStorage({
     destination: 'uploads/',
@@ -198,8 +199,8 @@ router.post("/estimate", async (req, res) => {
     }
   });
 
-
-router.post('/:id/purchase', authenticateToken, async (req, res) => {
+// Define the handler function first
+const handlePurchase = (req, res) => {
   const { id } = req.params;
   const buyerId = req.user.userId;
   
@@ -211,6 +212,10 @@ router.post('/:id/purchase', authenticateToken, async (req, res) => {
     WHERE p.id = ?
   `).get(id);
 
+  if (!property) {
+    return res.status(404).json({ error: 'Property not found' });
+  }
+
   // Create notification for agent
   db.prepare(`
     INSERT INTO notifications (user_id, type, message)
@@ -218,6 +223,9 @@ router.post('/:id/purchase', authenticateToken, async (req, res) => {
   `).run(property.agent_user_id, `New purchase request for property: ${property.title}`);
 
   res.json({ message: 'Purchase request sent' });
-});
+};
+
+// Then use it in the route
+router.post('/:id/purchase', authenticateToken, handlePurchase);
 
 module.exports = router;
