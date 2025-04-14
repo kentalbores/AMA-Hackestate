@@ -1,7 +1,6 @@
 const Database = require('better-sqlite3');
 const path = require('path');
 
-// Create database connection
 const db = new Database(path.join(__dirname, '../database.db'), { verbose: console.log });
 
 db.pragma('foreign_keys = ON');
@@ -42,8 +41,7 @@ db.exec(`
     FOREIGN KEY (property_id) REFERENCES properties(id),
     FOREIGN KEY (buyer_id) REFERENCES users(id),
     FOREIGN KEY (seller_id) REFERENCES users(id)
-  `)
-
-
+  )
+`);
 
 module.exports = db; 

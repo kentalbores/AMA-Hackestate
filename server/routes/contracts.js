@@ -2,6 +2,13 @@ const express = require('express');
 const router = express.Router();
 const Database = require('better-sqlite3');
 const db = new Database('./database.db');
+require('dotenv').config();
+const axios = require('axios');
+const multer = require('multer');
+const fs = require('fs');
+const path = require('path');
+
+
 // db.prepare(`
 //     CREATE TABLE IF NOT EXISTS contracts (
 //         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -135,6 +142,129 @@ router.get('/property/:propertyId', (req, res) => {
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
+});
+
+
+async function analyzeContract(contract) {
+    const prompt = `
+      You are a real estate expert. 
+      Details:
+    `;
+  
+    try {
+      const response = await axios.post(
+        "https://openrouter.ai/api/v1/chat/completions",
+        {
+          model: "openchat/openchat-7b", 
+          messages: [{ role: "user", content: prompt }],
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
+            "HTTP-Referer": "http://localhost:3000", 
+            "Content-Type": "application/json",
+          },
+        }
+      );
+  
+      const messageContent = response.data.choices[0].message.content;
+      return messageContent;
+    } catch (error) {
+      console.error("Error estimating property value:", error.message);
+      throw new Error("Failed to estimate property value");
+    }
+  }
+
+
+//   //pdf readerzr
+// const uploadDir = path.join(__dirname, 'uploads');
+//     if (!fs.existsSync(uploadDir)) {
+//     fs.mkdirSync(uploadDir);
+// }
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'server/contracts_files/');
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + '-' + file.originalname);
+  }
+});
+
+const fileFilter = (req, file, cb) => {
+  if (file.mimetype === 'application/pdf') {
+    cb(null, true);
+  } else {
+    cb(new Error('Only PDF files are allowed!'), false);
+  }
+};
+
+const upload = multer({ 
+  storage: storage,
+  fileFilter: fileFilter,
+  limits: {
+    fileSize: 10 * 1024 * 1024 // 10MB limit
+  }
+});
+
+router.post('/upload-pdf', upload.single('pdf'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No PDF file uploaded' });
+    }
+
+    const contractId = req.body.contractId;
+    
+    if (!contractId) {
+      fs.unlinkSync(req.file.path);
+      return res.status(400).json({ error: 'Contract ID is required' });
+    }
+
+    const contract = db.prepare('SELECT id FROM contracts WHERE id = ?').get(contractId);
+    if (!contract) {
+      fs.unlinkSync(req.file.path);
+      return res.status(404).json({ error: 'Contract not found' });
+    }
+
+    const pdfPath = req.file.path;
+    db.prepare(`
+      UPDATE contracts 
+      SET contract_detail = ?
+      WHERE id = ?
+    `).run(pdfPath, contractId);
+
+    res.status(200).json({ 
+      message: 'PDF uploaded successfully',
+      filePath: pdfPath,
+      contractId: contractId
+    });
+  } catch (error) {
+    if (req.file && req.file.path) {
+      fs.unlinkSync(req.file.path);
+    }
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.get('/:id/pdf', (req, res) => {
+  try {
+    const contract = db.prepare('SELECT contract_detail FROM contracts WHERE id = ?').get(req.params.id);
+    
+    if (!contract) {
+      return res.status(404).json({ error: 'Contract not found' });
+    }
+
+    const filePath = contract.contract_detail;
+    
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ error: 'PDF file not found' });
+    }
+
+    res.sendFile(path.resolve(filePath));
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
 module.exports = router;
