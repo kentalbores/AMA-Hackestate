@@ -9,11 +9,11 @@ async function seedDatabase() {
 
     // Insert a test user
     const stmt = db.prepare(`
-      INSERT OR IGNORE INTO users (email, password, name)
-      VALUES (?, ?, ?)
+      INSERT OR IGNORE INTO users (email, password, name, phone_number, role)
+      VALUES (?, ?, ?, ?, ?)
     `);
 
-    stmt.run('test@example.com', hashedPassword, 'Test User');
+    stmt.run('test@example.com', hashedPassword, 'Test User', '1234567890', 'admin');
 
     console.log('Database seeded successfully!');
   } catch (error) {

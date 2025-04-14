@@ -13,7 +13,44 @@ db.exec(`
     name TEXT NOT NULL,
     email TEXT UNIQUE NOT NULL,
     password TEXT NOT NULL,
+    phone_number TEXT NOT NULL,
+    role TEXT NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  )
+`);
+
+db.exec(`
+  CREATE TABLE IF NOT EXISTS agents (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    users_id INTEGER NOT NULL,
+    is_verified TEXT NOT NULL,
+    FOREIGN KEY (users_id) REFERENCES users(id)
+  )
+`);
+
+db.exec(`
+  CREATE TABLE IF NOT EXISTS buyers (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    users_id INTEGER NOT NULL,
+    is_verified TEXT NOT NULL,
+    FOREIGN KEY (users_id) REFERENCES users(id)
+  )
+`);
+
+db.exec(`
+  CREATE TABLE IF NOT EXISTS admin (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    users_id INTEGER NOT NULL,
+    FOREIGN KEY (users_id) REFERENCES users(id)
+  )
+`);
+
+db.exec(`
+  CREATE TABLE IF NOT EXISTS files (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    file_url TEXT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id)
   )
 `);
 
@@ -25,9 +62,9 @@ db.exec(`
     price REAL NOT NULL,
     location TEXT NOT NULL,
     image_url TEXT,
-    user_id INTEGER NOT NULL,
+    agents_id INTEGER NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id)
+    FOREIGN KEY (agents_id) REFERENCES agents(id)
   )
 `);
 
@@ -36,13 +73,13 @@ db.exec(`
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     property_id INTEGER NOT NULL,
     buyer_id INTEGER NOT NULL,
-    seller_id INTEGER NOT NULL,
+    agents_id INTEGER NOT NULL,
     status TEXT NOT NULL,
     contract_detail TEXT NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (property_id) REFERENCES properties(id),
-    FOREIGN KEY (buyer_id) REFERENCES users(id),
-    FOREIGN KEY (seller_id) REFERENCES users(id)
+    FOREIGN KEY (buyer_id) REFERENCES buyers(id),
+    FOREIGN KEY (agents_id) REFERENCES agents(id)
   )
 `);
 

@@ -5,6 +5,9 @@ const propertiesRouter = require('./routes/properties');
 const usersRouter = require('./routes/users');
 const authRoutes = require('./routes/auth');
 const contractsRouter = require('./routes/contracts');
+const agentsRouter = require('./routes/agents');
+const buyersRouter = require('./routes/buyers');
+const adminRouter = require('./routes/admin');
 
 const app = express();
 
@@ -19,6 +22,9 @@ app.use('/api/properties', propertiesRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/auth', authRoutes);
 app.use('/api/contracts', contractsRouter);
+app.use('/api/agents', agentsRouter);
+app.use('/api/buyers', buyersRouter);
+app.use('/api/admin', adminRouter);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
