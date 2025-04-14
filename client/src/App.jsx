@@ -6,6 +6,7 @@ import Text from './components/Text';
 import Profile from './components/Profile';
 import './App.css';
 import PropertyListing from './components/PropertyListing';
+import PropertyDetails from './components/PropertyDetails';
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
         <Route path="/upload" element={<Text />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/listings" element={<PropertyListing />} />
+        <Route path="/property/:id" element={<PropertyDetails />} />
         <Route path="/" element={<Navigate to="/login" replace />} />
       </Routes>
     </Router>

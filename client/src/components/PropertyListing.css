@@ -456,20 +456,36 @@
 }
 
 .view-details-btn {
-  padding: 8px 16px;
-  background-color: #fff;
-  color: #1e293b;
+  background-color: #4a6ee0;
+  color: white;
   border: none;
-  border-radius: 6px;
+  padding: 10px 20px;
+  border-radius: 4px;
   font-weight: 600;
-  font-size: 14px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background-color 0.2s;
+  text-decoration: none;
+  display: inline-block;
 }
 
 .view-details-btn:hover {
-  background-color: #3b82f6;
-  color: white;
+  background-color: #3a5dcf;
+}
+
+.property-title-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+.property-title {
+  margin: 0 0 8px 0;
+  font-size: 18px;
+  color: #333;
+  transition: color 0.2s;
+}
+
+.property-title:hover {
+  color: #4a6ee0;
 }
 
 .property-type-badge, .listing-type-badge {
@@ -502,16 +518,6 @@
   display: flex;
   flex-direction: column;
   flex-grow: 1;
-}
-
-.property-title {
-  font-size: 18px;
-  font-weight: 600;
-  margin: 0 0 12px 0;
-  color: #1e293b;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .property-location {
@@ -597,19 +603,21 @@
 }
 
 .contact-agent-btn {
-  padding: 6px 12px;
-  background-color: #3b82f6;
+  background-color: #4a6ee0;
   color: white;
   border: none;
-  border-radius: 6px;
-  font-size: 13px;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 14px;
   font-weight: 500;
   cursor: pointer;
   transition: background-color 0.2s;
+  text-decoration: none;
+  display: inline-block;
 }
 
 .contact-agent-btn:hover {
-  background-color: #2563eb;
+  background-color: #3a5dcf;
 }
 
 .loading-screen {

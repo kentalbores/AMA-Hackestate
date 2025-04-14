@@ -63,6 +63,7 @@ const isBuyer = async (req, res, next) => {
   }
 };
 
+// Get current user profile
 router.get('/me', authenticateToken, (req, res) => {
   try {
     const stmt = db.prepare('SELECT id, email, name, phone_number, role FROM users WHERE id = ?');

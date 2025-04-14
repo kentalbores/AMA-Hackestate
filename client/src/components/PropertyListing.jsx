@@ -54,12 +54,22 @@ const PropertyListing = () => {
   const fetchProperties = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('http://localhost:3000/api/properties/');
+      const token = localStorage.getItem('token');
+      console.log('Fetching properties with token:', token ? 'Token exists' : 'No token');
       
-      if (response.data) {
+      const response = await axios.get('http://localhost:3000/api/properties/', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      
+      console.log('API Response:', response);
+      console.log('Response data:', response.data);
+      
+      if (response.data && Array.isArray(response.data) && response.data.length > 0) {
+        console.log('Setting properties from API data');
         setProperties(response.data);
       } else {
-        // If data is not an array, create a sample property for demo purposes
+        console.log('No properties returned from API or invalid format, using fallback data');
+        // If data is not an array or empty, use sample properties for demo purposes
         setProperties([
           {
             id: 1,
@@ -111,6 +121,7 @@ const PropertyListing = () => {
       setLoading(false);
     } catch (err) {
       console.error('Error fetching properties:', err);
+      console.error('Error details:', err.response ? err.response.data : 'No response data');
       // Add demo properties instead of showing error
       setProperties([
         {
@@ -451,11 +462,13 @@ const PropertyListing = () => {
                       }}
                     />
                     <div className="image-overlay">
-                      <button className="view-details-btn">View Details</button>
+                      <Link to={`/property/${property.id}`} className="view-details-btn">View Details</Link>
                     </div>
                   </div>
                   <div className="property-details">
-                    <h3 className="property-title">{property.title}</h3>
+                    <Link to={`/property/${property.id}`} className="property-title-link">
+                      <h3 className="property-title">{property.title}</h3>
+                    </Link>
                     <div className="property-location">
                       <i className="location-icon">📍</i> {property.location}
                     </div>
@@ -482,7 +495,7 @@ const PropertyListing = () => {
                         <div className="agent-avatar">👤</div>
                         <div className="agent-name">Agent {property.agents_id}</div>
                       </div>
-                      <button className="contact-agent-btn">Contact</button>
+                      <Link to={`/property/${property.id}`} className="contact-agent-btn">Details</Link>
                     </div>
                   </div>
                 </div>
