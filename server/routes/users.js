@@ -3,8 +3,6 @@ const router = express.Router();
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const db = require('../db/database');
-const bcrypt = require('bcrypt');
-
 
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
@@ -107,7 +105,7 @@ router.get('/:id', authenticateToken, isAdmin, (req, res) => {
 
 // Register a new user
 router.post('/', async (req, res) => {
-  const { name, email, password } = req.body;
+  const { name, email, password, phone_number, role } = req.body;
   
   try {
     // Check if user exists
@@ -117,21 +115,36 @@ router.post('/', async (req, res) => {
     if (existingUser) {
       return res.status(400).json({ message: 'Email already exists' });
     }
-    
-    // Hash the password with a salt round of 10
-    const hashedPassword = await bcrypt.hash(password, 10);
-    
-    const stmt = db.prepare(`
-      INSERT INTO users (name, email, password)
-      VALUES (?, ?, ?)
+
+    // Hash password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    // Create user
+    const insertStmt = db.prepare(`
+      INSERT INTO users (name, email, password, phone_number, role)
+      VALUES (?, ?, ?, ?, ?)
     `);
-    const result = stmt.run(name, email, hashedPassword);
+    
+    const result = insertStmt.run(name, email, hashedPassword, phone_number || 'N/A', role || 'user');
+    const userId = result.lastInsertRowid;
+    
+    // Create role-specific record
+    if (role === 'agent') {
+      db.prepare('INSERT INTO agents (users_id, is_verified) VALUES (?, ?)').run(userId, 'false');
+    } else if (role === 'buyer') {
+      db.prepare('INSERT INTO buyers (users_id, is_verified) VALUES (?, ?)').run(userId, 'false');
+    } else if (role === 'admin') {
+      db.prepare('INSERT INTO admin (users_id) VALUES (?)').run(userId);
+    }
     
     // Return user info without password
     res.status(201).json({ 
-      id: result.lastInsertRowid,
+      id: userId,
       name,
-      email
+      email,
+      phone_number: phone_number || 'N/A',
+      role: role || 'user'
     });
   } catch (err) {
     console.error('Error creating user:', err);
