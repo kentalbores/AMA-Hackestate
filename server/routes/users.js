@@ -61,13 +61,13 @@ router.get('/:id', (req, res) => {
 });
 
 router.post('/', (req, res) => {
-  const { name, email } = req.body;
+  const { name, email, password} = req.body;
   try {
     const stmt = db.prepare(`
-      INSERT INTO users (name, email)
-      VALUES (?, ?)
+      INSERT INTO users (name, email, password)
+      VALUES (?, ?, ?)
     `);
-    const result = stmt.run(name, email);
+    const result = stmt.run(name, email, password);
     res.status(201).json({ id: result.lastInsertRowid });
   } catch (err) {
     if (err.code === 'SQLITE_CONSTRAINT_UNIQUE') {

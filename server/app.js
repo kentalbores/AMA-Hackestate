@@ -4,6 +4,7 @@ const cors = require('cors');
 const propertiesRouter = require('./routes/properties');
 const usersRouter = require('./routes/users');
 const authRoutes = require('./routes/auth');
+const contractsRouter = require('./routes/contracts');
 
 const app = express();
 
@@ -16,6 +17,7 @@ app.use('/uploads', express.static('uploads'));
 app.use('/api/properties', propertiesRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/auth', authRoutes);
+app.use('/api/contracts', contractsRouter);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

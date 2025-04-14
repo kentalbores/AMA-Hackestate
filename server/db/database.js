@@ -4,10 +4,8 @@ const path = require('path');
 // Create database connection
 const db = new Database(path.join(__dirname, '../database.db'), { verbose: console.log });
 
-// Enable foreign keys
 db.pragma('foreign_keys = ON');
 
-// Create users table if it doesn't exist
 db.exec(`
   CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -18,7 +16,6 @@ db.exec(`
   )
 `);
 
-// Create properties table if it doesn't exist
 db.exec(`
   CREATE TABLE IF NOT EXISTS properties (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -32,5 +29,21 @@ db.exec(`
     FOREIGN KEY (user_id) REFERENCES users(id)
   )
 `);
+
+db.exec(`
+  CREATE TABLE IF NOT EXISTS contracts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    property_id INTEGER NOT NULL,
+    buyer_id INTEGER NOT NULL,
+    seller_id INTEGER NOT NULL,
+    status TEXT NOT NULL,
+    contract_detail TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (property_id) REFERENCES properties(id),
+    FOREIGN KEY (buyer_id) REFERENCES users(id),
+    FOREIGN KEY (seller_id) REFERENCES users(id)
+  `)
+
+
 
 module.exports = db; 
