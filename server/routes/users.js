@@ -3,7 +3,7 @@ const router = express.Router();
 const jwt = require('jsonwebtoken');
 const db = require('../db/database');
 
-// Middleware to verify JWT token
+
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
@@ -21,7 +21,7 @@ const authenticateToken = (req, res, next) => {
   });
 };
 
-// Get current user profile
+
 router.get('/me', authenticateToken, (req, res) => {
   try {
     const stmt = db.prepare('SELECT id, email, name FROM users WHERE id = ?');
@@ -38,7 +38,6 @@ router.get('/me', authenticateToken, (req, res) => {
   }
 });
 
-// Get all users (admin only)
 router.get('/', authenticateToken, (req, res) => {
   try {
     const stmt = db.prepare('SELECT id, email, name FROM users');
