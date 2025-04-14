@@ -2,11 +2,9 @@ const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const router = express.Router();
-const Database = require('better-sqlite3');
+const db = require('../db/database');
 const axios = require("axios");
 require("dotenv").config();
-
-const db = new Database('../db/database.db');
 
 const storage = multer.diskStorage({
     destination: 'uploads/',

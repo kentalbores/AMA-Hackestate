@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const Database = require('better-sqlite3');
-const db = new Database('../db/database.db');
+const db = require('../db/database');
 require('dotenv').config();
 const axios = require('axios');
 const multer = require('multer');
