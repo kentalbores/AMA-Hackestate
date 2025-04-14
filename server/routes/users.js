@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 const db = require('../db/database');
 
 
@@ -60,21 +61,44 @@ router.get('/:id', (req, res) => {
   }
 });
 
-router.post('/', (req, res) => {
-  const { name, email, password} = req.body;
+router.post('/', async (req, res) => {
+  const { name, email, password } = req.body;
+
+  // Input validation
+  if (!name || !email || !password) {
+    return res.status(400).json({ message: 'All fields are required' });
+  }
+
   try {
-    const stmt = db.prepare(`
-      INSERT INTO users (name, email, password)
-      VALUES (?, ?, ?)
-    `);
-    const result = stmt.run(name, email, password);
-    res.status(201).json({ id: result.lastInsertRowid });
-  } catch (err) {
-    if (err.code === 'SQLITE_CONSTRAINT_UNIQUE') {
-      res.status(400).json({ error: 'Email already exists' });
-    } else {
-      res.status(500).json({ error: 'Failed to create user' });
+    // Check if user exists
+    const checkStmt = db.prepare('SELECT email FROM users WHERE email = ?');
+    const existingUser = checkStmt.get(email);
+
+    if (existingUser) {
+      return res.status(400).json({ message: 'Email already exists' });
     }
+
+    // Hash password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    // Create user - using a simpler SQL statement
+    const insertStmt = db.prepare('INSERT INTO users (name, email, password) VALUES (?, ?, ?)');
+    
+    try {
+      const result = insertStmt.run(name, email, hashedPassword);
+      return res.status(201).json({ 
+        message: 'User created successfully',
+        userId: result.lastInsertRowid 
+      });
+    } catch (dbError) {
+      console.error('Database error:', dbError);
+      return res.status(500).json({ message: 'Error creating user in database' });
+    }
+
+  } catch (error) {
+    console.error('Signup error:', error);
+    return res.status(500).json({ message: 'Server error during signup' });
   }
 });
 
