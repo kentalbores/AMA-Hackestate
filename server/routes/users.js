@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const db = require('../db/database');
+const bcrypt = require('bcrypt');
 
 
 const authenticateToken = (req, res, next) => {
@@ -60,21 +61,34 @@ router.get('/:id', (req, res) => {
   }
 });
 
-router.post('/', (req, res) => {
-  const { name, email, password} = req.body;
+router.post('/', async (req, res) => {
+  const { name, email, password } = req.body;
+  
   try {
+    // Check if user already exists
+    const existingUser = db.prepare('SELECT id FROM users WHERE email = ?').get(email);
+    if (existingUser) {
+      return res.status(400).json({ error: 'Email already exists' });
+    }
+    
+    // Hash the password with a salt round of 10
+    const hashedPassword = await bcrypt.hash(password, 10);
+    
     const stmt = db.prepare(`
       INSERT INTO users (name, email, password)
       VALUES (?, ?, ?)
     `);
-    const result = stmt.run(name, email, password);
-    res.status(201).json({ id: result.lastInsertRowid });
+    const result = stmt.run(name, email, hashedPassword);
+    
+    // Return user info without password
+    res.status(201).json({ 
+      id: result.lastInsertRowid,
+      name,
+      email
+    });
   } catch (err) {
-    if (err.code === 'SQLITE_CONSTRAINT_UNIQUE') {
-      res.status(400).json({ error: 'Email already exists' });
-    } else {
-      res.status(500).json({ error: 'Failed to create user' });
-    }
+    console.error('Error creating user:', err);
+    res.status(500).json({ error: 'Failed to create user' });
   }
 });
 
