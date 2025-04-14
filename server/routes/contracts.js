@@ -271,5 +271,37 @@ router.get('/:id/pdf', (req, res) => {
   }
 });
 
+// New route to analyze a contract by ID
+router.get('/:id/analyze', async (req, res) => {
+  try {
+    // Get the contract from the database
+    const contract = db.prepare('SELECT * FROM contracts WHERE id = ?').get(req.params.id);
+    
+    if (!contract) {
+      return res.status(404).json({ error: 'Contract not found' });
+    }
+
+    // Get the file path
+    const filePath = contract.contract_detail;
+    
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ error: 'PDF file not found' });
+    }
+
+    // Read the PDF file content
+    // Note: This is a simplified approach. In a production environment,
+    // you would use a PDF parsing library to extract text from the PDF
+    const fileContent = fs.readFileSync(filePath, 'utf8');
+    
+    // Analyze the contract
+    const analysis = await analyzeContract(fileContent);
+    
+    res.json({ analysis });
+  } catch (error) {
+    console.error('Error analyzing contract:', error);
+    res.status(500).json({ error: 'Failed to analyze contract' });
+  }
+});
+
 module.exports = router;
 
