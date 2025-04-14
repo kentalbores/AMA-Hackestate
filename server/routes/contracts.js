@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Database = require('better-sqlite3');
-const db = new Database('./database.db');
+const db = new Database('../db/database.db');
 require('dotenv').config();
 const axios = require('axios');
 const multer = require('multer');
@@ -9,20 +9,20 @@ const fs = require('fs');
 const path = require('path');
 
 
-// db.prepare(`
-//     CREATE TABLE IF NOT EXISTS contracts (
-//         id INTEGER PRIMARY KEY AUTOINCREMENT,
-//         property_id INTEGER NOT NULL,
-//         tenant_id INTEGER NOT NULL,
-//         start_date TEXT NOT NULL,
-//         end_date TEXT NOT NULL,
-//         monthly_rent INTEGER NOT NULL,
-//         status TEXT DEFAULT 'active',
-//         created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-//         FOREIGN KEY (property_id) REFERENCES properties(id),
-//         FOREIGN KEY (tenant_id) REFERENCES users(id)
-//     )
-// `).run();
+db.prepare(`
+    CREATE TABLE IF NOT EXISTS contracts (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        property_id INTEGER NOT NULL,
+        tenant_id INTEGER NOT NULL,
+        start_date TEXT NOT NULL,
+        end_date TEXT NOT NULL,
+        monthly_rent INTEGER NOT NULL,
+        status TEXT DEFAULT 'active',
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (property_id) REFERENCES properties(id),
+        FOREIGN KEY (tenant_id) REFERENCES users(id)
+    )
+`).run();
 
 router.get('/', (req, res) => {
     try {

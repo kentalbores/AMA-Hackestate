@@ -6,7 +6,7 @@ const Database = require('better-sqlite3');
 const axios = require("axios");
 require("dotenv").config();
 
-const db = new Database('./db/database.db');
+const db = new Database('../db/database.db');
 
 const storage = multer.diskStorage({
     destination: 'uploads/',
