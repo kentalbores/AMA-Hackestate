@@ -2,6 +2,8 @@ import React, { useState, useRef } from 'react';
 import DocViewer, { DocViewerRenderers } from "@cyntler/react-doc-viewer";
 import { PDFDocument } from 'pdf-lib';
 import { QRCodeCanvas } from 'qrcode.react';
+import ChatBox from './ChatBox';
+import './PDFViewer.css';
 
 function PDFViewer() {
   const [docs, setDocs] = useState([]);
@@ -125,46 +127,48 @@ function PDFViewer() {
 
   return (
     <div className="pdf-viewer-container">
-      <div className="upload-section">
-        <input
-          type="file"
-          accept=".pdf"
-          onChange={handleFileChange}
-          className="file-input"
-        />
+      <div className="main-content">
+        <div className="upload-section">
+          <input
+            type="file"
+            accept=".pdf"
+            onChange={handleFileChange}
+            className="file-input"
+          />
+        </div>
+        <div className="controls-section">
+          <button 
+            onClick={handleDownload} 
+            className="control-button"
+            disabled={!docs.length}
+          >
+            Download PDF
+          </button>
+          <button 
+            onClick={handlePrint} 
+            className="control-button"
+            disabled={!docs.length}
+          >
+            Print PDF
+          </button>
+        </div>
+        {docs.length > 0 && (
+          <div className="viewer-section">
+            <DocViewer
+              documents={docs}
+              pluginRenderers={DocViewerRenderers}
+              style={{ height: "calc(100vh - 100px)" }}
+            />
+          </div>
+        )}
       </div>
-
-      <div className="controls-section">
-        <button 
-          onClick={handleDownload} 
-          className="control-button"
-          disabled={!docs.length}
-        >
-          Download PDF
-        </button>
-        <button 
-          onClick={handlePrint} 
-          className="control-button"
-          disabled={!docs.length}
-        >
-          Print PDF
-        </button>
+      <div className="chat-section">
+        <ChatBox />
       </div>
-
       {/* Hidden QR Code component */}
       <div style={{ display: 'none' }} ref={qrRef}>
         <QRCodeCanvas value={qrValue} size={256} />
       </div>
-
-      {docs.length > 0 && (
-        <div className="viewer-section">
-          <DocViewer
-            documents={docs}
-            pluginRenderers={DocViewerRenderers}
-            style={{ height: "calc(100vh - 200px)" }}
-          />
-        </div>
-      )}
     </div>
   );
 }

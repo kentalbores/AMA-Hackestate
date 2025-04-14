@@ -11,6 +11,7 @@ const Login = () => {
     password: '',
   });
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -20,29 +21,103 @@ const Login = () => {
       ...prevState,
       [name]: value
     }));
+    // Clear error messages when user starts typing
+    setError('');
+    setSuccess('');
+  };
+
+  const validateForm = () => {
+    if (isSignUp && !formData.name.trim()) {
+      setError('Name is required');
+      return false;
+    }
+    if (!formData.email.trim()) {
+      setError('Email is required');
+      return false;
+    }
+    if (!formData.password.trim()) {
+      setError('Password is required');
+      return false;
+    }
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      setError('Please enter a valid email address');
+      return false;
+    }
+    // Password length validation
+    if (formData.password.length < 6) {
+      setError('Password must be at least 6 characters long');
+      return false;
+    }
+    return true;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setSuccess('');
+    
+    if (!validateForm()) {
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const endpoint = isSignUp ? 'http://localhost:3000/api/auth/register' : 'http://localhost:3000/api/auth/login';
-      const response = await axios.post(endpoint, formData);
-      
       if (isSignUp) {
-        setIsSignUp(false);
-        setError('Account created successfully! Please sign in.');
+        // Sign Up
+        const response = await axios.post('http://localhost:3000/api/users', {
+          name: formData.name.trim(),
+          email: formData.email.trim().toLowerCase(),
+          password: formData.password
+        });
+
+        if (response.data.message) {
+          setSuccess(response.data.message);
+          // Clear form
+          setFormData({
+            name: '',
+            email: '',
+            password: ''
+          });
+          // Switch to login after success
+          setTimeout(() => {
+            setIsSignUp(false);
+          }, 2000);
+        }
       } else {
-        localStorage.setItem('token', response.data.token);
-        navigate('/home');
+        // Login
+        const response = await axios.post('http://localhost:3000/api/auth/login', {
+          email: formData.email.trim().toLowerCase(),
+          password: formData.password
+        });
+
+        if (response.data.token) {
+          localStorage.setItem('token', response.data.token);
+          navigate('/home');
+        }
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'An error occurred');
+      console.error('Error:', err);
+      const errorMessage = err.response?.data?.message || 
+                          err.response?.data?.error ||
+                          'An error occurred. Please try again.';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
+  };
+
+  const switchMode = () => {
+    setIsSignUp(!isSignUp);
+    setError('');
+    setSuccess('');
+    setFormData({
+      name: '',
+      email: '',
+      password: '',
+    });
   };
 
   return (
@@ -51,7 +126,8 @@ const Login = () => {
         <div className="form-container sign-in-container">
           <form onSubmit={handleSubmit}>
             <h1>Sign in</h1>
-            {error && <p className="text-red-500">{error}</p>}
+            {error && <p className="error-message">{error}</p>}
+            {success && <p className="success-message">{success}</p>}
             <input
               type="email"
               name="email"
@@ -77,7 +153,8 @@ const Login = () => {
         <div className="form-container sign-up-container">
           <form onSubmit={handleSubmit}>
             <h1>Create Account</h1>
-            {error && <p className="text-red-500">{error}</p>}
+            {error && <p className="error-message">{error}</p>}
+            {success && <p className="success-message">{success}</p>}
             <input
               type="text"
               name="name"
@@ -113,14 +190,14 @@ const Login = () => {
             <div className="overlay-panel overlay-left">
               <h1>Welcome Back!</h1>
               <p>To keep connected with us please login with your personal info</p>
-              <button className="ghost" onClick={() => setIsSignUp(false)}>
+              <button className="ghost" onClick={switchMode}>
                 Sign In
               </button>
             </div>
             <div className="overlay-panel overlay-right">
               <h1>Hello, Friend!</h1>
               <p>Enter your personal details and start journey with us</p>
-              <button className="ghost" onClick={() => setIsSignUp(true)}>
+              <button className="ghost" onClick={switchMode}>
                 Sign Up
               </button>
             </div>
