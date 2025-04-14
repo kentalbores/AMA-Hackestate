@@ -16,15 +16,50 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 router.post('/', upload.single('image'), (req, res) => {
-    const { title, price, location } = req.body;
+    const { 
+      title, 
+      description,
+      price, 
+      location,
+      beds,
+      baths,
+      property_type,
+      land_area,
+      listing_type,
+      agents_id 
+    } = req.body;
     const imagePath = req.file ? `/uploads/${req.file.filename}` : null;
   
     try {
       const stmt = db.prepare(`
-        INSERT INTO properties (title, price, location, image_url)
-        VALUES (?, ?, ?, ?)
+        INSERT INTO properties (
+          title, 
+          description,
+          price, 
+          location, 
+          image_url,
+          beds,
+          baths,
+          property_type,
+          land_area,
+          listing_type,
+          agents_id
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
-      const result = stmt.run(title, price, location, imagePath);
+      const result = stmt.run(
+        title,
+        description,
+        price,
+        location,
+        imagePath,
+        beds,
+        baths,
+        property_type,
+        land_area,
+        listing_type,
+        agents_id
+      );
       res.status(201).json({ id: result.lastInsertRowid, image_url: imagePath });
     } catch (err) {
       console.error(err);
@@ -53,29 +88,47 @@ router.get('/:id', (req, res) => {
   }
 });
 
-router.post('/', (req, res) => {
-  const { title, location, price, image_url } = req.body;
-  try {
-    const stmt = db.prepare(`
-      INSERT INTO properties (title, location, price, image_url)
-      VALUES (?, ?, ?, ?)
-    `);
-    const result = stmt.run(title, location, price, image_url);
-    res.status(201).json({ id: result.lastInsertRowid });
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to create property' });
-  }
-});
-
 router.put('/:id', (req, res) => {
-  const { title, location, price, image_url } = req.body;
+  const { 
+    title, 
+    description,
+    price, 
+    location, 
+    image_url,
+    beds,
+    baths,
+    property_type,
+    land_area,
+    listing_type
+  } = req.body;
   try {
     const stmt = db.prepare(`
       UPDATE properties
-      SET title = ?, location = ?, price = ?, image_url = ?
+      SET title = ?, 
+          description = ?,
+          price = ?, 
+          location = ?, 
+          image_url = ?,
+          beds = ?,
+          baths = ?,
+          property_type = ?,
+          land_area = ?,
+          listing_type = ?
       WHERE id = ?
     `);
-    const result = stmt.run(title, location, price, image_url, req.params.id);
+    const result = stmt.run(
+      title,
+      description,
+      price,
+      location,
+      image_url,
+      beds,
+      baths,
+      property_type,
+      land_area,
+      listing_type,
+      req.params.id
+    );
     if (result.changes === 0) return res.status(404).json({ error: 'Property not found' });
     res.json({ message: 'Property updated' });
   } catch (err) {

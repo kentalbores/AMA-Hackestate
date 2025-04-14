@@ -62,6 +62,11 @@ db.exec(`
     price REAL NOT NULL,
     location TEXT NOT NULL,
     image_url TEXT,
+    beds INTEGER NOT NULL,
+    baths INTEGER NOT NULL,
+    property_type TEXT NOT NULL,
+    land_area REAL NOT NULL,
+    listing_type TEXT NOT NULL CHECK(listing_type IN ('for sale', 'for closure', 'for rent')),
     agents_id INTEGER NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (agents_id) REFERENCES agents(id)
@@ -81,6 +86,18 @@ db.exec(`
     FOREIGN KEY (buyer_id) REFERENCES buyers(id),
     FOREIGN KEY (agents_id) REFERENCES agents(id)
   )
+`);
+
+db.exec(`
+  CREATE TABLE notifications (
+       id INTEGER PRIMARY KEY AUTOINCREMENT,
+       user_id INTEGER NOT NULL,
+       type TEXT NOT NULL,
+       message TEXT NOT NULL,
+       is_read BOOLEAN DEFAULT FALSE,
+       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+       FOREIGN KEY (user_id) REFERENCES users(id)
+     )
 `);
 
 module.exports = db; 
