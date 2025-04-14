@@ -147,8 +147,13 @@ router.get('/property/:propertyId', (req, res) => {
 
 async function analyzeContract(contract) {
     const prompt = `
-      You are a real estate expert. 
-      Details:
+      You are a real estate expert. You are given a contract created by a real estate agent. 
+      Assist the buyer in summarizing/explaining the contract details. 
+      Provide a detailed explanation of the contract, including the terms, conditions, and any other relevant information.
+      If you feel that the contract is not disadvantageous to the buyer, you should suggest renegotiating the terms
+      and provide a detailed revision that would be fair for both parties.
+      The contract is in the form of a pdf file.
+      Here is the contract: ${contract}
     `;
   
     try {
