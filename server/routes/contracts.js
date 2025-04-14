@@ -303,5 +303,43 @@ router.get('/:id/analyze', async (req, res) => {
   }
 });
 
+router.post('/analyze', async (req, res) => {
+  try {
+    const { question, context } = req.body;
+    
+    if (!question) {
+      return res.status(400).json({ error: 'Question is required' });
+    }
+
+    const prompt = `
+      You are a real estate expert. A user has asked a question about their contract.
+      Previous context: ${JSON.stringify(context)}
+      User's question: ${question}
+      Please provide a helpful and detailed response to their question.
+    `;
+
+    const response = await axios.post(
+      "https://openrouter.ai/api/v1/chat/completions",
+      {
+        model: "openchat/openchat-7b",
+        messages: [{ role: "user", content: prompt }],
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
+          "HTTP-Referer": "http://localhost:3000",
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    const answer = response.data.choices[0].message.content;
+    res.json({ answer });
+  } catch (error) {
+    console.error('Error processing question:', error);
+    res.status(500).json({ error: 'Failed to process question' });
+  }
+});
+
 module.exports = router;
 

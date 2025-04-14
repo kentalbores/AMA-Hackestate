@@ -14,11 +14,10 @@ const Home = () => {
       return;
     }
 
-    // Fetch user data
     const fetchUserData = async () => {
       try {
         const response = await axios.get('http://localhost:3000/api/users/me', {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
         });
         setUser(response.data);
       } catch (error) {
@@ -38,8 +37,8 @@ const Home = () => {
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+      <div className="loading-screen">
+        <div className="loader"></div>
       </div>
     );
   }
@@ -48,47 +47,41 @@ const Home = () => {
     <div className="home-container">
       <nav className="navigation">
         <ul>
-          <li>
-            <Link to="/home" className="nav-link">Dashboard</Link>
-          </li>
-          <li>
-            <Link to="/pdf-viewer" className="nav-link">PDF Viewer</Link>
-          </li>
+          <li><Link to="/home" className="nav-link">Dashboard</Link></li>
+          <li><Link to="/listings" className="nav-link">My Listings</Link></li>
+          <li><Link to="/leads" className="nav-link">Leads</Link></li>
+          <li><Link to="/analytics" className="nav-link">Analytics</Link></li>
         </ul>
       </nav>
-      <div className="min-h-screen bg-gray-100">
-        <nav className="bg-white shadow-lg">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between h-16">
-              <div className="flex items-center">
-                <h1 className="text-xl font-bold text-gray-800">Dashboard</h1>
-              </div>
-              <div className="flex items-center">
-                <span className="text-gray-700 mr-4">Welcome, {user.name}</span>
-                <button
-                  onClick={handleLogout}
-                  className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                >
-                  Logout
-                </button>
-              </div>
-            </div>
-          </div>
-        </nav>
 
-        <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-          <div className="px-4 py-6 sm:px-0">
-            <div className="border-4 border-dashed border-gray-200 rounded-lg h-96 p-4">
-              <h2 className="text-2xl font-bold text-gray-800 mb-4">Welcome to Your Dashboard</h2>
-              <p className="text-gray-600">
-                This is your home page after successful login. You can start adding your content here.
-              </p>
-            </div>
+      <header className="dashboard-header">
+        <h1>Welcome, {user.name}</h1>
+        <button onClick={handleLogout} className="logout-button">Logout</button>
+      </header>
+
+      <main className="dashboard-main">
+        <section className="stats-grid">
+          <div className="stat-card">
+            <h2>Active Listings</h2>
+            <p>12 Properties</p>
           </div>
-        </main>
-      </div>
+          <div className="stat-card">
+            <h2>New Leads</h2>
+            <p>5 Potential Buyers</p>
+          </div>
+          <div className="stat-card">
+            <h2>Appointments</h2>
+            <p>3 Scheduled Viewings</p>
+          </div>
+        </section>
+
+        <section className="welcome-message">
+          <h2>Real Estate Dashboard</h2>
+          <p>Monitor your listings, track buyer inquiries, and manage appointments all in one place.</p>
+        </section>
+      </main>
     </div>
   );
 };
 
-export default Home; 
+export default Home;
