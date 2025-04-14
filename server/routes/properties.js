@@ -198,4 +198,26 @@ router.post("/estimate", async (req, res) => {
     }
   });
 
+
+router.post('/:id/purchase', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  const buyerId = req.user.userId;
+  
+  // Get property and agent info
+  const property = db.prepare(`
+    SELECT p.*, a.users_id as agent_user_id 
+    FROM properties p 
+    JOIN agents a ON p.agents_id = a.id 
+    WHERE p.id = ?
+  `).get(id);
+
+  // Create notification for agent
+  db.prepare(`
+    INSERT INTO notifications (user_id, type, message)
+    VALUES (?, 'property_purchase', ?)
+  `).run(property.agent_user_id, `New purchase request for property: ${property.title}`);
+
+  res.json({ message: 'Purchase request sent' });
+});
+
 module.exports = router;
