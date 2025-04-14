@@ -188,7 +188,7 @@ async function analyzeContract(contract) {
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, 'server/contracts_files/');
+    cb(null, 'contracts_files/');
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
@@ -226,10 +226,10 @@ router.post('/upload-pdf', upload.single('pdf'), async (req, res) => {
     }
 
     const contract = db.prepare('SELECT id FROM contracts WHERE id = ?').get(contractId);
-    if (!contract) {
-      fs.unlinkSync(req.file.path);
-      return res.status(404).json({ error: 'Contract not found' });
-    }
+    // if (!contract) {
+    //   fs.unlinkSync(req.file.path);
+    //   return res.status(404).json({ error: 'Contract not found' });
+    // }
 
     const pdfPath = req.file.path;
     db.prepare(`
