@@ -1,0 +1,189 @@
+.profile-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: #f5f7fa;
+  padding: 20px;
+}
+
+.profile-card {
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  width: 100%;
+  max-width: 500px;
+  padding: 30px;
+}
+
+.profile-card h1 {
+  color: #333;
+  margin-bottom: 24px;
+  font-size: 24px;
+  text-align: center;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 15px;
+}
+
+.profile-info {
+  margin-bottom: 20px;
+}
+
+.info-group {
+  margin-bottom: 16px;
+}
+
+.info-group label {
+  display: block;
+  color: #777;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.info-group p {
+  font-size: 16px;
+  color: #333;
+  font-weight: 500;
+  padding: 8px 0;
+  margin: 0;
+}
+
+.role-badge {
+  display: inline-block;
+  background-color: #e6f7ff;
+  color: #0077cc;
+  border-radius: 4px;
+  padding: 4px 10px;
+  font-size: 14px;
+  text-transform: capitalize;
+}
+
+.profile-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+.back-button, .logout-button, .edit-button, .cancel-button, .save-button {
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+  font-size: 14px;
+}
+
+.back-button, .cancel-button {
+  background-color: #f0f0f0;
+  color: #333;
+}
+
+.back-button:hover, .cancel-button:hover {
+  background-color: #e4e4e4;
+}
+
+.logout-button {
+  background-color: #ff4d4f;
+  color: white;
+}
+
+.logout-button:hover {
+  background-color: #ff7875;
+}
+
+.edit-button {
+  display: block;
+  width: 100%;
+  background-color: #1890ff;
+  color: white;
+  margin-bottom: 20px;
+}
+
+.edit-button:hover {
+  background-color: #40a9ff;
+}
+
+.save-button {
+  background-color: #52c41a;
+  color: white;
+}
+
+.save-button:hover {
+  background-color: #73d13d;
+}
+
+.loading, .error {
+  text-align: center;
+  padding: 30px;
+  font-size: 16px;
+  color: #555;
+}
+
+.error {
+  color: #ff4d4f;
+}
+
+/* Form styles */
+.profile-form {
+  margin-bottom: 20px;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  color: #777;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.form-group input:focus {
+  border-color: #1890ff;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+}
+
+.form-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 24px;
+}
+
+.update-status {
+  margin-bottom: 16px;
+  padding: 10px;
+  border-radius: 4px;
+  text-align: center;
+  font-weight: 500;
+}
+
+.success-status {
+  background-color: #f6ffed;
+  border: 1px solid #b7eb8f;
+  color: #52c41a;
+}
+
+.error-status {
+  background-color: #fff2f0;
+  border: 1px solid #ffccc7;
+  color: #ff4d4f;
+}
+
+.role-note {
+  display: block;
+  color: #999;
+  font-size: 12px;
+  margin-top: 4px;
+  font-style: italic;
+} 

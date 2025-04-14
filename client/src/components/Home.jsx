@@ -48,15 +48,20 @@ const Home = () => {
       <nav className="navigation">
         <ul>
           <li><Link to="/home" className="nav-link">Dashboard</Link></li>
+          <li><Link to="/properties" className="nav-link">Properties</Link></li>
           <li><Link to="/listings" className="nav-link">My Listings</Link></li>
           <li><Link to="/leads" className="nav-link">Leads</Link></li>
           <li><Link to="/analytics" className="nav-link">Analytics</Link></li>
+          <li><Link to="/profile" className="nav-link">My Profile</Link></li>
         </ul>
       </nav>
 
       <header className="dashboard-header">
         <h1>Welcome, {user.name}</h1>
-        <button onClick={handleLogout} className="logout-button">Logout</button>
+        <div className="header-actions">
+          <Link to="/profile" className="profile-link">View Profile</Link>
+          <button onClick={handleLogout} className="logout-button">Logout</button>
+        </div>
       </header>
 
       <main className="dashboard-main">
@@ -78,6 +83,10 @@ const Home = () => {
         <section className="welcome-message">
           <h2>Real Estate Dashboard</h2>
           <p>Monitor your listings, track buyer inquiries, and manage appointments all in one place.</p>
+          <div className="action-buttons">
+            <Link to="/properties" className="action-button">Browse Properties</Link>
+            <Link to="/profile" className="action-button profile-action">Update Profile</Link>
+          </div>
         </section>
       </main>
     </div>
