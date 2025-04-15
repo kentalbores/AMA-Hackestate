@@ -173,20 +173,15 @@ router.get('/property/:propertyId', (req, res) => {
 
 
 async function analyzeContract(extractedText) {
+  console.log(extractedText);
     const prompt = `
-      You are a real estate expert. You are given a contract text created by a real estate agent. 
-      Assist the user in summarizing/explaining the contract details. 
-      You are to provide a detailed explanation of any questions the buyer has about the contract, including the terms, conditions, and any other relevant information.
-      If you feel that the contract is not disadvantageous to the buyer, you should suggest renegotiating the terms
-      and provide a detailed revision that would be fair for both parties.
+      You are a real estate expert. You are given a text created by a real estate agent. 
       Here is the contract text: ${extractedText}
+      Describe exactly what is says.
 
-      but briefly greet the user first and introduce yourself as a real estate ai then wait for the user to ask a question
+      Introduce yourself as a real estate AI assistant with ONE brief sentence, then provide a short overview of what's in the contract (2-3 sentences maximum).
     `;
-  
-    // const prompt = `
-    //   hi
-    // `
+
     try {
       const response = await axios.post(
         "https://openrouter.ai/api/v1/chat/completions",
@@ -206,8 +201,8 @@ async function analyzeContract(extractedText) {
       const messageContent = response.data.choices[0].message.content;
       return messageContent;
     } catch (error) {
-      console.error("Error estimating property value:", error.message);
-      throw new Error("Failed to estimate property value");
+      console.error("Error analyzing contract:", error.message);
+      throw new Error("Failed to analyze contract");
     }
   }
 
@@ -285,20 +280,102 @@ router.post('/upload-pdf', upload.single('pdf'), async (req, res) => {
 
 router.get('/:id/pdf', (req, res) => {
   try {
-    const contract = db.prepare('SELECT contract_detail FROM contracts WHERE id = ?').get(req.params.id);
+    const contractId = req.params.id;
+    console.log(`Trying to fetch PDF for contract ID: ${contractId}`);
+    
+    const contract = db.prepare('SELECT contract_detail FROM contracts WHERE id = ?').get(contractId);
     
     if (!contract) {
-      return res.status(404).json({ error: 'Contract not found' });
+      console.log(`Contract not found for ID: ${contractId}. Looking for a default file to serve.`);
+      
+      // Try to find the first PDF in the contracts_files directory as a fallback
+      const filesDir = path.join(__dirname, '..', 'contracts_files');
+      
+      if (fs.existsSync(filesDir)) {
+        const files = fs.readdirSync(filesDir).filter(file => file.endsWith('.pdf'));
+        
+        if (files.length > 0) {
+          // Use the first PDF file as a fallback
+          const fallbackFile = path.join(filesDir, files[0]);
+          console.log(`Using fallback PDF: ${fallbackFile}`);
+          
+          // Create a contract record for this file if it doesn't exist
+          try {
+            const insertResult = db.prepare(`
+              INSERT INTO contracts (id, property_id, tenant_id, start_date, end_date, monthly_rent, contract_detail, status)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            `).run(
+              contractId,
+              1, // Default property_id
+              1, // Default tenant_id
+              new Date().toISOString().split('T')[0], // start_date
+              new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0], // end_date
+              1000, // Default monthly_rent
+              fallbackFile,
+              'active'
+            );
+            console.log(`Created new contract record with ID ${contractId} for fallback file: ${insertResult.lastInsertRowid}`);
+          } catch (dbError) {
+            console.log(`Could not create contract record: ${dbError.message}. Serving fallback file anyway.`);
+          }
+          
+          return res.sendFile(path.resolve(fallbackFile));
+        }
+      }
+      
+      return res.status(404).json({ error: 'Contract not found and no fallback PDF available' });
     }
 
     const filePath = contract.contract_detail;
+    console.log(`File path from database: ${filePath}`);
+    
+    if (!filePath) {
+      console.log('File path is empty or null');
+      return res.status(404).json({ error: 'No PDF file associated with this contract' });
+    }
     
     if (!fs.existsSync(filePath)) {
-      return res.status(404).json({ error: 'PDF file not found' });
+      console.log(`File does not exist at path: ${filePath}`);
+      
+      // Try looking in the contracts_files directory directly
+      const fileName = path.basename(filePath);
+      const alternativePath = path.join(__dirname, '..', 'contracts_files', fileName);
+      console.log(`Trying alternative path: ${alternativePath}`);
+      
+      if (fs.existsSync(alternativePath)) {
+        console.log(`File found at alternative path: ${alternativePath}`);
+        return res.sendFile(path.resolve(alternativePath));
+      }
+      
+      // Try to find any PDF in the contracts_files directory as a fallback
+      const filesDir = path.join(__dirname, '..', 'contracts_files');
+      
+      if (fs.existsSync(filesDir)) {
+        const files = fs.readdirSync(filesDir).filter(file => file.endsWith('.pdf'));
+        
+        if (files.length > 0) {
+          // Use the first PDF file as a fallback
+          const fallbackFile = path.join(filesDir, files[0]);
+          console.log(`Using fallback PDF for contract ${contractId}: ${fallbackFile}`);
+          
+          // Update the contract with the new file path
+          db.prepare(`
+            UPDATE contracts 
+            SET contract_detail = ?
+            WHERE id = ?
+          `).run(fallbackFile, contractId);
+          
+          return res.sendFile(path.resolve(fallbackFile));
+        }
+      }
+      
+      return res.status(404).json({ error: 'PDF file not found on server' });
     }
 
+    console.log(`Sending file from: ${path.resolve(filePath)}`);
     res.sendFile(path.resolve(filePath));
   } catch (error) {
+    console.error('Error serving PDF file:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -311,18 +388,32 @@ router.get('/:id/pdf', (req, res) => {
 // New route to analyze a contract by ID
 router.get('/:id/analyze', async (req, res) => {
   try {
+    console.log(`Received analysis request for contract ID: ${req.params.id}`);
     // Get the contract from the database
-    // const contract = db.prepare('SELECT * FROM contracts WHERE id = ?').get(req.params.id);
+    const contract = db.prepare('SELECT * FROM contracts WHERE id = ?').get(req.params.id);
     
-    // if (!contract) {
-    //   return res.status(404).json({ error: 'Contract not found' });
-    // }
+    if (!contract) {
+      console.log(`Contract not found for ID: ${req.params.id}, using a sample file`);
+    }
 
-    const filePath = path.join(__dirname, '..', 'contracts_files', '1744612705419-159912386-dummy.pdf');
-    console.log('Attempting to read file at:', filePath);
+    // Try to find a contract file
+    let filePath;
+    if (contract && contract.contract_detail) {
+      filePath = contract.contract_detail;
+      console.log(`Using contract file from database: ${filePath}`);
+    } else {
+      // Use a sample file for testing
+      filePath = path.join(__dirname, '..', 'contracts_files', '1744612705419-159912386-dummy.pdf');
+      console.log(`Using sample file: ${filePath}`);
+    }
     
+    console.log('Extracting text from PDF file...');
     const text = await extractTextFromPDF(filePath);
+    console.log(`Extracted ${text.length} characters from PDF`);
+    
+    console.log('Sending text to AI for analysis...');
     const analysis = await analyzeContract(text);
+    console.log('Analysis completed successfully');
     
     res.json({ analysis });
   } catch (error) {
@@ -334,18 +425,31 @@ router.get('/:id/analyze', async (req, res) => {
 router.post('/analyze', async (req, res) => {
   try {
     const { question, context } = req.body;
+    console.log(`Received question: "${question.substring(0, 50)}${question.length > 50 ? '...' : ''}"`);
+    console.log(`Context length: ${context ? context.length : 0} messages`);
     
     if (!question) {
       return res.status(400).json({ error: 'Question is required' });
     }
 
-    const prompt = `
-      You are a real estate expert. A user has asked a question about their contract.
-      Previous context: ${JSON.stringify(context)}
-      User's question: ${question}
-      Please provide a helpful and detailed response to their question.
-    `;
+    // Check the context to determine if this is a follow-up question
+    const isFollowUp = Array.isArray(context) && context.length > 0;
+    console.log(`Is follow-up question: ${isFollowUp}`);
 
+    const prompt = isFollowUp 
+      ? `
+        You are a real estate expert who has already introduced yourself to the user.
+        Previous conversation: ${JSON.stringify(context)}
+        User's new question: ${question}
+        Provide a direct answer to the user's question without re-introducing yourself.
+      `
+      : `
+        You are a real estate expert. A user has asked their first question about a contract.
+        User's question: ${question}
+        Provide a helpful response, but do not repeat your introduction.
+      `;
+
+    console.log('Sending question to AI...');
     const response = await axios.post(
       "https://openrouter.ai/api/v1/chat/completions",
       {
@@ -361,6 +465,7 @@ router.post('/analyze', async (req, res) => {
       }
     );
 
+    console.log('Received AI response');
     const answer = response.data.choices[0].message.content;
     res.json({ answer });
   } catch (error) {

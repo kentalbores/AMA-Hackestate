@@ -228,21 +228,12 @@ const PropertyDetails = () => {
                         <span>{agent.phone_number || 'N/A'}</span>
                       </div>
                     </div>
-                    {console.log('Debug values:', {
-                      propertyAgentId: property.agents_id,
-                      userId: user.id,
-                      userRole: user.role,
-                      isUserAgent: user.role === 'agent',
-                      isPropertyOwnedByUser: user.role === 'agent' && Number(property.agents_id) === Number(user.id)
-                    })}
-                    {!(user.role === 'agent' && Number(property.agents_id) === Number(user.id)) && (
                     <button 
                       className="contact-agent-button"
                       onClick={handleInquiryButtonClick}
                     >
                       Contact Agent
                     </button>
-                    )}
                   </>
                 ) : (
                   <p>Agent information not available</p>
@@ -259,7 +250,7 @@ const PropertyDetails = () => {
         <div className="modal-overlay">
           <div className="modal-content">
             <PropertyInquiryForm 
-              Idproperty={id}
+              propertyId={id}
               propertyTitle={property.title}
               onSuccess={handleInquirySuccess}
               onCancel={() => setShowInquiryForm(false)}

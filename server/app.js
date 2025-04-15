@@ -8,6 +8,8 @@ const contractsRouter = require('./routes/contracts');
 const agentsRouter = require('./routes/agents');
 const buyersRouter = require('./routes/buyers');
 const adminRouter = require('./routes/admin');
+const notificationsRouter = require('./routes/notifications');
+const inquiriesRouter = require('./routes/inquiries');
 
 const app = express();
 
@@ -25,6 +27,8 @@ app.use('/api/contracts', contractsRouter);
 app.use('/api/agents', agentsRouter);
 app.use('/api/buyers', buyersRouter);
 app.use('/api/admin', adminRouter);
+app.use('/api/notifications', notificationsRouter);
+app.use('/api/inquiries', inquiriesRouter);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

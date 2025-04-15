@@ -111,27 +111,89 @@ const NotificationBell = () => {
   };
 
   const formatTimeAgo = (dateString) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const seconds = Math.floor((now - date) / 1000);
-    
-    if (seconds < 60) return `${seconds} seconds ago`;
-    
-    const minutes = Math.floor(seconds / 60);
-    if (minutes < 60) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
-    
-    const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
-    
-    const days = Math.floor(hours / 24);
-    if (days < 30) return `${days} day${days > 1 ? 's' : ''} ago`;
-    
-    const months = Math.floor(days / 30);
-    if (months < 12) return `${months} month${months > 1 ? 's' : ''} ago`;
-    
-    const years = Math.floor(months / 12);
-    return `${years} year${years > 1 ? 's' : ''} ago`;
+    if (!dateString) return '';
+
+    try {
+      // Parse the ISO timestamp string
+      const date = new Date(dateString);
+      
+      // Check if the date is valid
+      if (isNaN(date.getTime())) {
+        console.error('Invalid date:', dateString);
+        return 'invalid date';
+      }
+      
+      const now = new Date();
+      
+      // Calculate time difference in milliseconds
+      const diff = now.getTime() - date.getTime();
+      
+      // Convert to seconds
+      const seconds = Math.floor(diff / 1000);
+      
+      if (seconds < 60) {
+        return `${seconds} second${seconds !== 1 ? 's' : ''} ago`;
+      }
+      
+      const minutes = Math.floor(seconds / 60);
+      if (minutes < 60) {
+        return `${minutes} minute${minutes !== 1 ? 's' : ''} ago`;
+      }
+      
+      const hours = Math.floor(minutes / 60);
+      if (hours < 24) {
+        return `${hours} hour${hours !== 1 ? 's' : ''} ago`;
+      }
+      
+      const days = Math.floor(hours / 24);
+      if (days < 30) {
+        return `${days} day${days !== 1 ? 's' : ''} ago`;
+      }
+      
+      const months = Math.floor(days / 30);
+      if (months < 12) {
+        return `${months} month${months !== 1 ? 's' : ''} ago`;
+      }
+      
+      const years = Math.floor(months / 12);
+      return `${years} year${years !== 1 ? 's' : ''} ago`;
+    } catch (error) {
+      console.error('Error formatting time:', error);
+      return 'time unknown';
+    }
   };
+
+  // Debug function to help identify time issues
+  const logTimeInfo = (notification) => {
+    if (!notification) return;
+    
+    console.log('========= TIME DEBUG INFO =========');
+    console.log('Raw created_at from server:', notification.created_at);
+    
+    const parsedDate = new Date(notification.created_at);
+    console.log('Parsed date object:', parsedDate);
+    console.log('Parsed date ISO string:', parsedDate.toISOString());
+    console.log('Parsed date UTC string:', parsedDate.toUTCString());
+    console.log('Parsed date locale string:', parsedDate.toString());
+    
+    const now = new Date();
+    console.log('Current date object:', now);
+    console.log('Current ISO string:', now.toISOString());
+    
+    const diffMs = now.getTime() - parsedDate.getTime();
+    console.log('Time difference (ms):', diffMs);
+    console.log('Time difference (seconds):', Math.floor(diffMs / 1000));
+    console.log('Time difference (minutes):', Math.floor(diffMs / (1000 * 60)));
+    console.log('Time difference (hours):', Math.floor(diffMs / (1000 * 60 * 60)));
+    console.log('================================');
+  };
+
+  // Use this for debugging if needed
+  useEffect(() => {
+    if (notifications.length > 0) {
+      logTimeInfo(notifications[0]);
+    }
+  }, [notifications]);
 
   return (
     <div className="notification-bell-container" ref={dropdownRef}>

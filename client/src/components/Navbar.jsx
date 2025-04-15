@@ -12,14 +12,14 @@ const Navbar = ({ user, activePage }) => {
 
   return (
     <nav className="navigation">
-      <div className="nav-brand">Real Estate Platform</div>
+      <div className="nav-brand">SeguradHomes</div>
       <ul className="nav-links">
         <li>
           <Link 
             to="/home" 
             className={`nav-link ${activePage === 'dashboard' ? 'active' : ''}`}
           >
-            Dashboard
+            Home
           </Link>
         </li>
         
@@ -40,6 +40,15 @@ const Navbar = ({ user, activePage }) => {
             className={`nav-link ${activePage === 'properties' ? 'active' : ''}`}
           >
             Properties
+          </Link>
+        </li>
+        
+        <li>
+          <Link 
+            to="/inquiries" 
+            className={`nav-link ${activePage === 'inquiries' ? 'active' : ''}`}
+          >
+            Inquiries
           </Link>
         </li>
       </ul>

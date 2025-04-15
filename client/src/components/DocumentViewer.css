@@ -1,0 +1,153 @@
+.document-viewer-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+}
+
+.document-header {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background-color: #f5f5f5;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.document-header h3 {
+  flex: 1;
+  margin: 0;
+  text-align: center;
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.back-button,
+.download-button {
+  background: none;
+  border: none;
+  color: #1890ff;
+  cursor: pointer;
+  padding: 0.5rem;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  transition: color 0.2s;
+}
+
+.back-button:hover,
+.download-button:hover {
+  color: #40a9ff;
+}
+
+.document-content {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.pdf-container {
+  flex: 3;
+  height: 100%;
+  border-right: 1px solid #e0e0e0;
+  overflow: auto;
+}
+
+.chat-container {
+  flex: 2;
+  height: 100%;
+  min-width: 300px;
+  display: flex;
+  flex-direction: column;
+}
+
+.document-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 2rem;
+}
+
+.loader {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #1890ff;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.document-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 2rem;
+  text-align: center;
+}
+
+.document-error h3 {
+  color: #f5222d;
+  margin-bottom: 1rem;
+}
+
+.document-error .back-button {
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+  border: 1px solid #1890ff;
+  border-radius: 4px;
+}
+
+.document-error .retry-button {
+  margin-top: 1rem;
+  margin-left: 0.5rem;
+  padding: 0.5rem 1rem;
+  border: 1px solid #52c41a;
+  background: #52c41a;
+  color: white;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.document-error .retry-button:hover {
+  background: #73d13d;
+}
+
+.error-actions {
+  display: flex;
+  justify-content: center;
+}
+
+/* Responsive adjustments */
+@media (max-width: 992px) {
+  .document-content {
+    flex-direction: column;
+  }
+  
+  .pdf-container {
+    flex: 1;
+    height: 60%;
+    border-right: none;
+    border-bottom: 1px solid #e0e0e0;
+  }
+  
+  .chat-container {
+    flex: 1;
+    height: 40%;
+    min-width: auto;
+  }
+} 

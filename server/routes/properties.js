@@ -655,7 +655,7 @@ router.post('/:id/inquire', authenticateToken, async (req, res) => {
         phone,
         created_at
       )
-      VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
+      VALUES (?, ?, ?, ?, ?, ?, datetime('now', '+8 hours'))
     `);
     
     try {
@@ -709,7 +709,7 @@ router.post('/:id/inquire', authenticateToken, async (req, res) => {
               is_read, 
               created_at
             )
-            VALUES (?, ?, ?, ?, FALSE, datetime('now'))
+            VALUES (?, ?, ?, ?, FALSE, datetime('now', '+8 hours'))
           `);
           
           const notificationResult = notificationStmt.run(
@@ -731,7 +731,7 @@ router.post('/:id/inquire', authenticateToken, async (req, res) => {
               is_read, 
               created_at
             )
-            VALUES (?, ?, ?, FALSE, datetime('now'))
+            VALUES (?, ?, ?, FALSE, datetime('now', '+8 hours'))
           `);
           
           const notificationResult = notificationStmt.run(

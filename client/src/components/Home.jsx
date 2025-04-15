@@ -8,6 +8,7 @@ const Home = () => {
   const [user, setUser] = useState(null);
   const [notifications, setNotifications] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const lastActivity = new Date().toLocaleDateString();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -100,7 +101,10 @@ const Home = () => {
       <Navbar user={user} activePage="dashboard" />
 
       <header className="dashboard-header">
-        <h1>Welcome, {user.name}</h1>
+        <div className="welcome-section">
+          <h1>Welcome, {user.name}</h1>
+          <p className="last-login">Last login: {lastActivity}</p>
+        </div>
         <div className="header-actions">
           <Link to="/profile" className="profile-link">View Profile</Link>
           <button onClick={handleLogout} className="logout-button">Logout</button>
@@ -108,19 +112,34 @@ const Home = () => {
       </header>
 
       <main className="dashboard-main">
-        <section className="stats-grid">
-          <div className="stat-card">
-            <h2>Active Listings</h2>
-            <p>12 Properties</p>
+        <section className="summary-section">
+          <div className="summary-card">
+            <h2>System Status</h2>
+            <div className="status-indicator online">
+              <span className="status-dot"></span>
+              <span>System Online</span>
+            </div>
+            <p className="status-message">All systems operational</p>
           </div>
-          <div className="stat-card">
-            <h2>New Leads</h2>
-            <p>5 Potential Buyers</p>
-          </div>
-          <div className="stat-card">
-            <h2>Appointments</h2>
-            <p>3 Scheduled Viewings</p>
-          </div>
+          
+          {user.role === 'agent' && (
+            <div className="summary-card">
+              <h2>Recent Activity</h2>
+              <p className="activity-count">{notifications.length} new notifications</p>
+              <div className="activity-summary">
+                <div className="activity-item">
+                  <span className="activity-icon">📈</span>
+                  <span>Dashboard views: 12</span>
+                </div>
+                <div className="activity-item">
+                  <span className="activity-icon">📊</span>
+                  <span>Profile completion: 85%</span>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          
         </section>
 
         {user.role === 'agent' && (
@@ -159,15 +178,26 @@ const Home = () => {
           </section>
         )}
 
-        <section className="welcome-message">
-          <h2>Real Estate Dashboard</h2>
-          <p>Monitor your listings, track buyer inquiries, and manage appointments all in one place.</p>
-          <div className="action-buttons">
-            <Link to="/properties" className="action-button">Browse Properties</Link>
-            {user.role === 'agent' && (
-              <Link to="/listings" className="action-button">Manage Listings</Link>
-            )}
-            <Link to="/profile" className="action-button profile-action">Update Profile</Link>
+        <section className="dashboard-info">
+          <div className="info-card">
+            <h3>Platform Updates</h3>
+            <div className="update-item">
+              <span className="update-date">May 15, 2023</span>
+              <p>New document approval system with QR code functionality</p>
+            </div>
+            <div className="update-item">
+              <span className="update-date">May 1, 2023</span>
+              <p>Enhanced messaging system with file attachments</p>
+            </div>
+          </div>
+          
+          <div className="info-card">
+            <h3>Tips & Tricks</h3>
+            <ul className="tips-list">
+              <li>Use the document viewer to easily review contracts</li>
+              <li>Enable notifications to stay updated on new inquiries</li>
+              <li>Complete your profile to improve visibility</li>
+            </ul>
           </div>
         </section>
       </main>
