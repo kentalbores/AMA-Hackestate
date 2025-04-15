@@ -47,7 +47,7 @@ async function extractTextFromPDF(filePath) {
 
 router.get('/test', async (req, res) => {
   try {
-    const filePath = path.join(__dirname, '..', 'contracts_files', 'contract1.pdf');
+    const filePath = path.join(__dirname, '..', 'contracts_files', '1744612705419-159912386-dummy.pdf');
     console.log('Attempting to read file at:', filePath);
     
     const text = await extractTextFromPDF(filePath);
@@ -173,26 +173,13 @@ router.get('/property/:propertyId', (req, res) => {
 
 
 async function analyzeContract(extractedText) {
-    // const prompt = `
-    //   You are a real estate expert. You are given a contract text created by a real estate agent. 
-    //   Assist the user in summarizing/explaining the contract details. 
-    //   You are to provide a detailed explanation of any questions the buyer has about the contract, including the terms, conditions, and any other relevant information.
-    //   If you feel that the contract is not disadvantageous to the buyer, you should suggest renegotiating the terms
-    //   and provide a detailed revision that would be fair for both parties.
-    //   Here is the contract text: ${extractedText}
-
-    //   but briefly greet the user first and introduce yourself as a real estate ai then wait for the user to ask a question
-    // `;
-
     const prompt = `
-      You are a real estate expert. 
+      You are a real estate expert. You are given a contract text created by a real estate agent. 
       Assist the user in summarizing/explaining the contract details. 
       You are to provide a detailed explanation of any questions the buyer has about the contract, including the terms, conditions, and any other relevant information.
       If you feel that the contract is not disadvantageous to the buyer, you should suggest renegotiating the terms
       and provide a detailed revision that would be fair for both parties.
-      
-      base your answer on this contract detail:
-      **Real Estate Purchase Agreement** **Parties** _Buyer:_ John Doe _Address:_ 123 Main St, Anytown, USA _Phone:_ (123) 456-7890 _Email:_ johndoe@example.com _Seller:_ Jane Smith _Address:_ 456 Elm St, Anytown, USA _Phone:_ (987) 654-3210 _Email:_ janesmith@example.com **Property** _Legal Description:_ Lot 1, Block 2, Anytown Subdivision _Address:_ 789 Oak St, Anytown, USA **Purchase Price and Terms** _Purchase Price:_ $200,000 _Deposit:_ $5,000 _Payment Terms:_ Cash **Inspections and Contingencies** _Inspection Period:_ 10 days _Financing Contingency:_ Yes _Seller's Disclosure:_ Yes _Appraisal Contingency:_ Yes _Title Insurance:_ Yes **Closing Date** _Closing Date:_ September 1, 2022 _Time:_ 1:00 PM **Escrow Agent** _Escrow Agent:_ ABC Escrow Company _Address:_ 101 Pine St, Anytown, USA _Phone:_ (111) 222-3333 **Representations and Warranties** The Seller represents and warrants that: 1. The Seller has good and marketable title to the Property, free and clear of any liens or encumbrances, except for any exceptions agreed upon by the Parties. 2. The Seller has the full power and authority to sell the Property and to enter into this Agreement. 3. The Property is in compliance with all applicable laws, codes, and regulations. **Buyer's Obligations** The Buyer agrees to: 1. Deposit the Earnest Money with the Escrow Agent within 5 days of executing this Agreement. 2. Conduct any necessary inspections within the Inspection Period. 3. Pay the Purchase Price at the Closing, subject to any contingencies set forth in this Agreement. **Seller's Obligations** The Seller agrees to: 1. Provide a Title Insurance Policy at the Seller's expense. 2. Correct any title defects discovered within the Inspection Period. 3. Transfer good and marketable title to the Property at the Closing. **Miscellaneous** This Agreement shall be governed by the laws of California. 
+      Here is the contract text: ${extractedText}
 
       but briefly greet the user first and introduce yourself as a real estate ai then wait for the user to ask a question
     `;

@@ -149,102 +149,87 @@ const Text = () => {
   };
 
   return (
-    <div className="app-container">
-      <div className="sidebar">
-        <div className="sidebar-header">
-          <h2>Contract Analysis</h2>
-        </div>
-        <div className="upload-section">
-          <h3>Upload Contract</h3>
-          <div className="file-input-container">
+    <div className="container mx-auto p-4 flex flex-col md:flex-row gap-4 max-w-6xl">
+      <div className="w-full md:w-1/3 lg:w-1/4 bg-white rounded-lg shadow-md p-4">
+        <h1 className="text-xl font-bold mb-4">Upload Contract</h1>
+        <div className="w-full">
+          <div className="mb-4">
             <input
               type="file"
               accept=".pdf"
               onChange={handleFileChange}
-              className="file-input"
-              id="file-input"
+              className="block w-full text-sm text-gray-500
+                file:mr-4 file:py-2 file:px-4
+                file:rounded-full file:border-0
+                file:text-sm file:font-semibold
+                file:bg-blue-50 file:text-blue-700
+                hover:file:bg-blue-100"
             />
-            <label htmlFor="file-input" className="file-label">
-              {file ? file.name : 'Choose PDF file'}
-            </label>
           </div>
-          {error && <p className="error-message">{error}</p>}
-          {uploadStatus && <p className="success-message">{uploadStatus}</p>}
+          {error && <p className="text-red-500 mb-4 text-sm">{error}</p>}
+          {uploadStatus && <p className="text-green-500 mb-4 text-sm">{uploadStatus}</p>}
           <button
             onClick={handleUpload}
-            className="upload-button"
-            disabled={!file}
+            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 w-full transition-colors"
           >
-            Upload Contract
+            Upload
           </button>
         </div>
       </div>
 
-      <div className="chat-container">
-        <div className="chat-box">
-          <div className="messages-container">
+      <div className="w-full md:w-2/3 lg:w-3/4">
+        <div className="chat-box bg-white rounded-lg shadow-md overflow-hidden flex flex-col h-[600px]">
+          <div className="chat-header bg-blue-600 text-white p-3">
+            <h3 className="font-semibold">Contract Analysis Assistant</h3>
+          </div>
+          <div className="messages-container flex-grow overflow-y-auto p-4">
             {messages.map((message, index) => (
               <div 
                 key={index} 
-                className={`message-wrapper ${message.sender === 'user' ? 'user-wrapper' : 'bot-wrapper'}`}
+                className={`message ${message.sender === 'user' ? 'user-message' : 'bot-message'} mb-3`}
               >
-                <div className="message-avatar">
-                  {message.sender === 'user' ? 'U' : 'A'}
+                <div className="message-content p-3 rounded-lg max-w-[85%] break-words">
+                  {message.text}
                 </div>
-                <div className="message-content-wrapper">
-                  <div className="message-content">
-                    {message.text}
-                  </div>
-                  <div className="message-timestamp">
-                    {new Date(message.timestamp).toLocaleTimeString([], { 
-                      hour: '2-digit', 
-                      minute: '2-digit' 
-                    })}
-                  </div>
+                <div className="message-timestamp text-xs text-gray-500 mt-1">
+                  {new Date(message.timestamp).toLocaleTimeString([], { 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                  })}
                 </div>
               </div>
             ))}
             {isAnalyzing && (
-              <div className="message-wrapper bot-wrapper">
-                <div className="message-avatar">A</div>
-                <div className="message-content-wrapper">
-                  <div className="message-content analyzing">
-                    <div className="typing-indicator">
-                      <span></span>
-                      <span></span>
-                      <span></span>
-                    </div>
-                    Analyzing your contract...
+              <div className="analyzing-message bot-message mb-3">
+                <div className="message-content p-3 rounded-lg bg-gray-100">
+                  <div className="flex items-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500 mr-2"></div>
+                    Analyzing your contract... Please wait...
                   </div>
                 </div>
               </div>
             )}
             <div ref={messagesEndRef} />
           </div>
-          <div className="input-container">
-            <form onSubmit={handleSubmit} className="message-form">
+          <form onSubmit={handleSubmit} className="message-input-container p-3 border-t border-gray-200">
+            <div className="flex">
               <input
                 type="text"
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 placeholder="Ask about the contract..."
-                className="message-input"
+                className="message-input flex-grow p-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 disabled={isAnalyzing}
               />
               <button 
                 type="submit" 
-                className="send-button"
-                disabled={isAnalyzing || !newMessage.trim()}
+                className="send-button bg-blue-500 text-white px-4 py-2 rounded-r-md hover:bg-blue-600 transition-colors"
+                disabled={isAnalyzing}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="send-icon">
-                  <path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" />
-                </svg>
+                Send
               </button>
-            </form>
-            <div className="input-footer">
-              Contract Analysis Assistant powered by AI
             </div>
-          </div>
+          </form>
         </div>
       </div>
     </div>
