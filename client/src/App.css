@@ -1,7 +1,6 @@
 #root {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 2rem;
   text-align: center;
 }
 
@@ -12,10 +11,10 @@
   transition: filter 300ms;
 }
 .logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
+  filter: drop-shadow(0 0 2em #4a8767aa);
 }
 .logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+  filter: drop-shadow(0 0 2em #4a8767aa);
 }
 
 @keyframes logo-spin {
@@ -69,7 +68,7 @@
 }
 
 .navigation {
-  background-color: #333;
+  background-color: #125b50;
   padding: 1rem;
   margin-bottom: 2rem;
 }
@@ -83,7 +82,7 @@
 }
 
 .nav-link {
-  color: white;
+  color: #eff6f2;
   text-decoration: none;
   font-weight: 500;
   padding: 0.5rem 1rem;
@@ -92,7 +91,7 @@
 }
 
 .nav-link:hover {
-  background-color: #555;
+  background-color: #4a8767;
 }
 
 .controls-section {
@@ -100,13 +99,13 @@
   gap: 1rem;
   margin: 1rem 0;
   padding: 1rem;
-  background-color: #f5f5f5;
+  background-color: #eff6f2;
   border-radius: 8px;
 }
 
 .control-button {
   padding: 0.5rem 1rem;
-  background-color: #007bff;
+  background-color: #4a8767;
   color: white;
   border: none;
   border-radius: 4px;
@@ -115,7 +114,7 @@
 }
 
 .control-button:hover {
-  background-color: #0056b3;
+  background-color: #125b50;
 }
 
 .control-button:disabled {

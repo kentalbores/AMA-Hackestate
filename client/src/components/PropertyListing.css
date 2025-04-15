@@ -3,7 +3,8 @@
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background-color: #f9fafb;
+  background-color: #eff6f2;
+  width: 100%;
 }
 
 /* Navigation */
@@ -18,12 +19,14 @@
   position: sticky;
   top: 0;
   z-index: 100;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .nav-brand {
   font-weight: 700;
   font-size: 18px;
-  color: #3b82f6;
+  color: #125b50;
 }
 
 .navigation ul {
@@ -52,8 +55,8 @@
 }
 
 .nav-link.active {
-  color: #3b82f6;
-  background-color: #eff6ff;
+  color: #125b50;
+  background-color: #eff6f2;
 }
 
 .user-actions {
@@ -88,6 +91,7 @@
 .page-header {
   margin-bottom: 24px;
   padding: 24px 0 0 0;
+  clear: both; /* Ensure it clears any floated elements */
 }
 
 .page-header h1 {
@@ -104,25 +108,24 @@
 }
 
 /* Property Listing Container */
-.property-listing-container {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 20px 40px;
-  color: #333;
-  width: 100%;
-}
+
+
 
 /* Search and Filter Header */
 .search-filter-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin: 0 0 20px 0; /* Removed top margin */
   background-color: white;
   padding: 15px;
   border-radius: 10px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 72px; /* Just below the navbar */
+  z-index: 90;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .search-bar {
@@ -145,8 +148,8 @@
 
 .search-input:focus {
   outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  border-color: #4a8767;
+  box-shadow: 0 0 0 3px rgba(74, 135, 103, 0.1);
 }
 
 .search-button {
@@ -183,8 +186,9 @@
 }
 
 .filter-button:hover {
-  background-color: #f1f5f9;
-  border-color: #cbd5e1;
+  background-color: #eff6f2;
+  border-color: #4a8767;
+  color: #125b50;
 }
 
 /* Status Bar */
@@ -335,7 +339,8 @@
 
 .price-input select:focus {
   outline: none;
-  border-color: #3b82f6;
+  border-color: #4a8767;
+  box-shadow: 0 0 0 3px rgba(74, 135, 103, 0.1);
 }
 
 .sort-options {
@@ -371,7 +376,8 @@
 
 .sort-group select:focus {
   outline: none;
-  border-color: #3b82f6;
+  border-color: #4a8767;
+  box-shadow: 0 0 0 3px rgba(74, 135, 103, 0.1);
 }
 
 .filter-actions {
@@ -382,18 +388,18 @@
 .apply-filters {
   width: 100%;
   padding: 12px 20px;
-  background-color: #3b82f6;
+  background-color: #4a8767;
   color: white;
   border: none;
   border-radius: 8px;
-  font-size: 16px;
-  font-weight: 500;
+  font-weight: 600;
+  font-size: 14px;
   cursor: pointer;
   transition: background-color 0.2s;
 }
 
 .apply-filters:hover {
-  background-color: #2563eb;
+  background-color: #125b50;
 }
 
 /* Property Grid */
@@ -401,6 +407,9 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 25px;
+  width: 100%;
+  box-sizing: border-box;
+  padding-top: 10px; /* Add space at top of grid */
 }
 
 .property-card {
@@ -413,6 +422,8 @@
   height: 100%;
   display: flex;
   flex-direction: column;
+  box-sizing: border-box;
+  margin-bottom: 0; /* Remove bottom margin */
 }
 
 .property-card:hover {
@@ -456,20 +467,21 @@
 }
 
 .view-details-btn {
-  background-color: #4a6ee0;
+  background-color: #4a8767;
   color: white;
   border: none;
-  padding: 10px 20px;
-  border-radius: 4px;
-  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 14px;
   cursor: pointer;
   transition: background-color 0.2s;
-  text-decoration: none;
-  display: inline-block;
+  opacity: 0;
+  transform: translateY(10px);
 }
 
 .view-details-btn:hover {
-  background-color: #3a5dcf;
+  background-color: #125b50;
 }
 
 .property-title-link {
@@ -514,7 +526,7 @@
 }
 
 .property-details {
-  padding: 20px;
+  padding: 15px; /* Added proper padding */
   display: flex;
   flex-direction: column;
   flex-grow: 1;
@@ -541,7 +553,7 @@
 
 .property-features {
   display: flex;
-  justify-content: space-between;
+  justify-content: space-evenly;
   margin-bottom: 20px;
   padding-bottom: 20px;
   border-bottom: 1px solid #e2e8f0;
@@ -603,21 +615,19 @@
 }
 
 .contact-agent-btn {
-  background-color: #4a6ee0;
+  background-color: #4a8767;
   color: white;
   border: none;
   padding: 6px 12px;
-  border-radius: 4px;
-  font-size: 14px;
+  border-radius: 6px;
+  font-size: 12px;
   font-weight: 500;
   cursor: pointer;
   transition: background-color 0.2s;
-  text-decoration: none;
-  display: inline-block;
 }
 
 .contact-agent-btn:hover {
-  background-color: #3a5dcf;
+  background-color: #125b50;
 }
 
 .loading-screen {
@@ -763,3 +773,58 @@
     font-size: 18px;
   }
 } 
+
+/* Filter Modal - Updated with Animation */
+.filter-modal {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 100%;
+  max-width: 420px;
+  height: 100vh;
+  background-color: white;
+  box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  overflow-y: auto;
+  padding: 20px;
+  transform: translateX(100%);
+  transition: transform 0.3s ease-in-out;
+}
+
+.filter-modal.active {
+  transform: translateX(0);
+}
+
+/* Overlay for filter modal */
+.filter-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease;
+}
+
+.filter-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Fixed Search and Filter Header */
+.search-filter-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  background-color: white;
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 72px; /* Just below the navbar */
+  z-index: 90;
+}

@@ -7,6 +7,7 @@ import Profile from './components/Profile';
 import './App.css';
 import PropertyListing from './components/PropertyListing';
 import PropertyDetails from './components/PropertyDetails';
+import AgentListings from './components/AgentListings';
 
 function App() {
   return (
@@ -17,8 +18,9 @@ function App() {
         <Route path="/pdf-viewer" element={<PDFViewer />} />
         <Route path="/upload" element={<Text />} />
         <Route path="/profile" element={<Profile />} />
-        <Route path="/listings" element={<PropertyListing />} />
+        <Route path="/properties" element={<PropertyListing />} />
         <Route path="/property/:id" element={<PropertyDetails />} />
+        <Route path="/listings" element={<AgentListings />} />
         <Route path="/" element={<Navigate to="/login" replace />} />
       </Routes>
     </Router>

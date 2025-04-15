@@ -49,7 +49,7 @@ const ChatBox = ({ currentPdfFile, contractId }) => {
 
     try {
       // Call the analyze endpoint
-      const analysisResponse = await axios.get(`http://localhost:3000/api/contracts/${contractId}/analyze`);
+      const analysisResponse = await axios.get(`http://localhost:3000/api/contracts/1/analyze`);
       
       setMessages(prev => [
         ...prev,

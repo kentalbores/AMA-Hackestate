@@ -88,6 +88,33 @@ input {
   width: 100%;
 }
 
+select {
+  background-color: #eee;
+  border: none;
+  padding: 12px 15px;
+  margin: 8px 0;
+  width: 100%;
+  font-family: "Montserrat", sans-serif;
+  appearance: none;
+  cursor: pointer;
+}
+
+.select-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.select-wrapper::after {
+  content: "▼";
+  font-size: 12px;
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: #555;
+}
+
 .container {
   background-color: #fff;
   border-radius: 10px;
@@ -249,4 +276,20 @@ footer i {
 footer a {
   color: #3c97bf;
   text-decoration: none;
+}
+
+.error-message {
+  color: #e74c3c;
+  font-size: 14px;
+  margin: 10px 0;
+  text-align: center;
+  width: 100%;
+}
+
+.success-message {
+  color: #2ecc71;
+  font-size: 14px;
+  margin: 10px 0;
+  text-align: center;
+  width: 100%;
 } 

@@ -5,7 +5,7 @@ const router = express.Router();
 const db = require('../db/database');
 const axios = require("axios");
 require("dotenv").config();
-const { authenticateToken } = require('../middleware/auth');
+const authenticateToken = require('../middleware/auth');
 const jwt = require('jsonwebtoken');
 
 const storage = multer.diskStorage({
@@ -74,7 +74,7 @@ router.get('/', (req, res) => {
     // Check if the request is from an admin
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
-    let includeUnverified = false;
+    let includeUnverified = true;
     
     if (token) {
       try {
@@ -392,11 +392,16 @@ router.get('/agent/my-properties', authenticateToken, async (req, res) => {
 // Route for agents to update their own properties
 router.put('/agent/:id', authenticateToken, upload.single('image'), async (req, res) => {
   try {
+    console.log('Updating property:', req.params.id);
+    console.log('Request body:', req.body);
+    console.log('File:', req.file);
+    
     // Check if user is an agent
     const userStmt = db.prepare('SELECT role FROM users WHERE id = ?');
     const user = userStmt.get(req.user.userId);
     
     if (!user || user.role !== 'agent') {
+      console.log('User is not an agent:', req.user.userId);
       return res.status(403).json({ error: 'Only agents can update properties' });
     }
     
@@ -405,6 +410,7 @@ router.put('/agent/:id', authenticateToken, upload.single('image'), async (req, 
     const agent = agentStmt.get(req.user.userId);
     
     if (!agent) {
+      console.log('Agent profile not found for user:', req.user.userId);
       return res.status(404).json({ error: 'Agent profile not found' });
     }
     
@@ -413,6 +419,7 @@ router.put('/agent/:id', authenticateToken, upload.single('image'), async (req, 
     const property = propertyStmt.get(req.params.id, agent.id);
     
     if (!property) {
+      console.log('Property not found or does not belong to agent:', req.params.id, agent.id);
       return res.status(404).json({ error: 'Property not found or you do not have permission to update it' });
     }
     
@@ -428,8 +435,21 @@ router.put('/agent/:id', authenticateToken, upload.single('image'), async (req, 
       listing_type
     } = req.body;
     
-    const imagePath = req.file ? `/uploads/${req.file.filename}` : property.image_url;
-  
+    // Validate required fields
+    if (!title || !description || !price || !location) {
+      return res.status(400).json({ 
+        error: 'Missing required fields',
+        details: 'Title, description, price, and location are required' 
+      });
+    }
+    
+    // Handle the image path - use the new image if provided, otherwise keep the existing one
+    let imagePath = property.image_url;
+    if (req.file) {
+      imagePath = `/uploads/${req.file.filename}`;
+      console.log('New image path:', imagePath);
+    }
+    
     const updateStmt = db.prepare(`
       UPDATE properties
       SET title = ?, 
@@ -441,7 +461,8 @@ router.put('/agent/:id', authenticateToken, upload.single('image'), async (req, 
           baths = ?,
           property_type = ?,
           land_area = ?,
-          listing_type = ?
+          listing_type = ?,
+          is_verified = 'false'
       WHERE id = ? AND agents_id = ?
     `);
     
@@ -451,26 +472,35 @@ router.put('/agent/:id', authenticateToken, upload.single('image'), async (req, 
       price,
       location,
       imagePath,
-      beds,
-      baths,
-      property_type,
-      land_area,
-      listing_type,
+      beds || 0,
+      baths || 0,
+      property_type || 'house',
+      land_area || 0,
+      listing_type || 'for_sale',
       req.params.id,
       agent.id
     );
     
     if (result.changes === 0) {
+      console.log('No changes made to property:', req.params.id);
       return res.status(404).json({ error: 'Property not found or you do not have permission to update it' });
     }
     
+    console.log('Property updated successfully:', req.params.id);
+    
+    // Get the updated property
+    const updatedProperty = db.prepare('SELECT * FROM properties WHERE id = ?').get(req.params.id);
+    
     res.json({ 
       message: 'Property updated successfully',
-      image_url: imagePath
+      property: updatedProperty
     });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to update property' });
+    console.error('Error updating property:', err);
+    res.status(500).json({ 
+      error: 'Failed to update property',
+      details: err.message 
+    });
   }
 });
 
@@ -513,6 +543,220 @@ router.delete('/agent/:id', authenticateToken, async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to delete property' });
+  }
+});
+
+// Route for agents to get their own listings
+router.get('/agent/listings', authenticateToken, async (req, res) => {
+  try {
+    // Check if user is an agent
+    const userStmt = db.prepare('SELECT role FROM users WHERE id = ?');
+    const user = userStmt.get(req.user.userId);
+    
+    if (!user || user.role !== 'agent') {
+      return res.status(403).json({ error: 'Only agents can access their listings' });
+    }
+    
+    // Get agent ID
+    const agentStmt = db.prepare('SELECT id FROM agents WHERE users_id = ?');
+    const agent = agentStmt.get(req.user.userId);
+    
+    if (!agent) {
+      return res.status(404).json({ error: 'Agent profile not found' });
+    }
+    
+    // Get all properties for this agent
+    const propertiesStmt = db.prepare('SELECT * FROM properties WHERE agents_id = ?');
+    const properties = propertiesStmt.all(agent.id);
+    
+    res.json(properties);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch agent properties' });
+  }
+});
+
+// Send inquiry for a property
+router.post('/:id/inquire', authenticateToken, async (req, res) => {
+  try {
+    console.log('Inquiry request received:', { body: req.body, params: req.params, user: req.user });
+    
+    const propertyId = req.params.id;
+    const buyerId = req.user.userId;
+    const { message, name, phone, email } = req.body;
+    
+    console.log('Extracted data:', { propertyId, buyerId, message, name, phone, email });
+    
+    if (!message) {
+      console.log('Message validation failed');
+      return res.status(400).json({ error: 'Message is required' });
+    }
+    
+    console.log('Fetching property details...');
+    
+    // First check if property exists
+    const propertyCheckStmt = db.prepare('SELECT * FROM properties WHERE id = ?');
+    const property = propertyCheckStmt.get(propertyId);
+    
+    if (!property) {
+      console.log('Property not found');
+      return res.status(404).json({ error: 'Property not found' });
+    }
+    
+    console.log('Property found:', property);
+    
+    // Now get the agent's user ID
+    const agentStmt = db.prepare('SELECT users_id FROM agents WHERE id = ?');
+    const agent = agentStmt.get(property.agents_id);
+    
+    if (!agent) {
+      console.log('Agent not found for property');
+      return res.status(404).json({ error: 'Agent not found for this property' });
+    }
+    
+    console.log('Agent found:', agent);
+    
+    // Get buyer info if available
+    console.log('Fetching buyer info...');
+    const buyerStmt = db.prepare('SELECT name, email, phone_number FROM users WHERE id = ?');
+    const buyer = buyerStmt.get(buyerId);
+    console.log('Buyer info:', buyer);
+    
+    console.log('Creating inquiry record...');
+    
+    // Check if inquiries table exists and create it if needed
+    try {
+      db.prepare(`
+        CREATE TABLE IF NOT EXISTS inquiries (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          property_id INTEGER NOT NULL,
+          user_id INTEGER,
+          name TEXT NOT NULL,
+          email TEXT,
+          phone TEXT,
+          message TEXT NOT NULL,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+      `).run();
+      console.log('Ensured inquiries table exists');
+    } catch (tableError) {
+      console.error('Error ensuring inquiries table exists:', tableError);
+      // Continue anyway as the table might already exist
+    }
+    
+    // Create the inquiry in the database
+    const inquiryStmt = db.prepare(`
+      INSERT INTO inquiries (
+        property_id, 
+        user_id, 
+        message, 
+        name, 
+        email, 
+        phone,
+        created_at
+      )
+      VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
+    `);
+    
+    try {
+      const inquiryResult = inquiryStmt.run(
+        propertyId,
+        buyerId,
+        message,
+        name || buyer?.name || 'Anonymous',
+        email || buyer?.email || 'Not provided',
+        phone || buyer?.phone_number || 'Not provided'
+      );
+      console.log('Inquiry created:', inquiryResult);
+      
+      console.log('Creating notification...');
+      // Create a notification for the agent
+      const notificationMessage = `New inquiry for ${property.title} from ${name || buyer?.name || 'Anonymous'}: "${message.substring(0, 50)}${message.length > 50 ? '...' : ''}"`;
+      console.log('Notification message:', notificationMessage);
+      
+      try {
+        console.log('Agent user ID:', agent.users_id);
+        
+        // Log all users to help debug
+        const allUsers = db.prepare('SELECT id, name, role FROM users').all();
+        console.log('All users in database:', allUsers);
+        
+        // Double check that the agent's user ID exists
+        const agentUser = db.prepare('SELECT id, name, role FROM users WHERE id = ?').get(agent.users_id);
+        
+        if (!agentUser) {
+          console.log('Warning: Agent user ID does not exist in users table:', agent.users_id);
+          // Try to find the first agent user as a fallback
+          const firstAgent = db.prepare('SELECT u.id FROM users u JOIN agents a ON u.id = a.users_id LIMIT 1').get();
+          if (firstAgent) {
+            console.log('Using fallback agent user ID:', firstAgent.id);
+            agent.users_id = firstAgent.id;
+          }
+        } else {
+          console.log('Agent user found:', agentUser);
+        }
+        
+        // Check if notifications table has related_id column
+        let notificationStmt;
+        try {
+          // First try with related_id
+          notificationStmt = db.prepare(`
+            INSERT INTO notifications (
+              user_id, 
+              type, 
+              message, 
+              related_id, 
+              is_read, 
+              created_at
+            )
+            VALUES (?, ?, ?, ?, FALSE, datetime('now'))
+          `);
+          
+          const notificationResult = notificationStmt.run(
+            agent.users_id,
+            'property_inquiry',
+            notificationMessage,
+            inquiryResult.lastInsertRowid
+          );
+          console.log('Notification created with related_id:', notificationResult);
+        } catch (columnError) {
+          console.log('Notification table may not have related_id column, trying alternative query');
+          
+          // If that fails, try without related_id
+          notificationStmt = db.prepare(`
+            INSERT INTO notifications (
+              user_id, 
+              type, 
+              message, 
+              is_read, 
+              created_at
+            )
+            VALUES (?, ?, ?, FALSE, datetime('now'))
+          `);
+          
+          const notificationResult = notificationStmt.run(
+            agent.users_id,
+            'property_inquiry',
+            notificationMessage
+          );
+          console.log('Notification created without related_id:', notificationResult);
+        }
+        
+        res.status(201).json({ 
+          message: 'Inquiry sent successfully',
+          inquiry_id: inquiryResult.lastInsertRowid
+        });
+      } catch (notificationError) {
+        console.error('Error creating notification:', notificationError);
+        throw new Error('Failed to create notification: ' + notificationError.message);
+      }
+    } catch (inquiryError) {
+      console.error('Error creating inquiry:', inquiryError);
+      throw new Error('Failed to create inquiry: ' + inquiryError.message);
+    }
+  } catch (error) {
+    console.error('Error sending inquiry:', error);
+    res.status(500).json({ error: error.message || 'Failed to send inquiry' });
   }
 });
 

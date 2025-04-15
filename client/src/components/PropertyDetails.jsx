@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './PropertyDetails.css';
+import PropertyInquiryForm from './PropertyInquiryForm';
+import Navbar from './Navbar';
 
 const PropertyDetails = () => {
   const [property, setProperty] = useState(null);
@@ -9,6 +11,7 @@ const PropertyDetails = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [user, setUser] = useState(null);
+  const [showInquiryForm, setShowInquiryForm] = useState(false);
   const { id } = useParams();
   const navigate = useNavigate();
 
@@ -82,13 +85,17 @@ const PropertyDetails = () => {
     fetchPropertyDetails();
   }, [id, navigate]);
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    navigate('/login');
-  };
-
   const formatPrice = (price) => {
     return '₱' + Number(price).toLocaleString();
+  };
+
+  const handleInquiryButtonClick = () => {
+    setShowInquiryForm(true);
+  };
+
+  const handleInquirySuccess = () => {
+    // Handle successful inquiry submission
+    setShowInquiryForm(false);
   };
 
   if (loading) {
@@ -105,7 +112,7 @@ const PropertyDetails = () => {
       <div className="error-container">
         <h2>Error</h2>
         <p>{error}</p>
-        <button onClick={() => navigate('/listings')}>Back to Listings</button>
+        <button onClick={() => navigate('/properties')}>Back to Properties</button>
       </div>
     );
   }
@@ -115,40 +122,24 @@ const PropertyDetails = () => {
       <div className="not-found-container">
         <h2>Property Not Found</h2>
         <p>The property you're looking for doesn't exist or has been removed.</p>
-        <button onClick={() => navigate('/listings')}>Back to Listings</button>
+        <button onClick={() => navigate('/properties')}>Back to Properties</button>
       </div>
     );
   }
 
   return (
     <div className="app-container">
-      <nav className="navigation">
-        <div className="nav-brand">Real Estate Platform</div>
-        <ul>
-          <li><Link to="/home" className="nav-link">Dashboard</Link></li>
-          <li><Link to="/properties" className="nav-link">Properties</Link></li>
-          <li><Link to="/listings" className="nav-link">My Listings</Link></li>
-          <li><Link to="/profile" className="nav-link">My Profile</Link></li>
-        </ul>
-        <div className="user-actions">
-          <span className="user-name">{user?.name || 'User'}</span>
-          <button onClick={handleLogout} className="logout-button">Logout</button>
-        </div>
-      </nav>
+      <Navbar user={user} activePage="properties" />
 
       <div className="property-details-container">
         <div className="back-link">
-          <Link to="/listings">← Back to Listings</Link>
+          <Link to="/properties">← Back to Properties</Link>
         </div>
         
         <div className="property-details-content">
-          <div className="property-header">
-            <h1>{property.title}</h1>
-            <div className="property-location">
-              <i className="location-icon">📍</i> {property.location}
-            </div>
-            <div className="property-price">{formatPrice(property.price)}</div>
-          </div>
+        <div className="property-header">
+          <h1>{property.title}</h1>
+        </div>
           
           <div className="property-images">
             <img 
@@ -160,7 +151,12 @@ const PropertyDetails = () => {
               }}
             />
           </div>
-          
+          <div className="property-header">
+            <div className="property-location">
+              <i className="location-icon">📍</i> {property.location}
+            </div>
+            <div className="property-price">{formatPrice(property.price)}</div>
+          </div>
           <div className="property-info-grid">
             <div className="property-main-info">
               <div className="info-section">
@@ -199,10 +195,6 @@ const PropertyDetails = () => {
                 <p className="property-description">{property.description || 'No description available.'}</p>
               </div>
               
-              <div className="action-buttons">
-                <button className="schedule-viewing-btn">Schedule Viewing</button>
-                <button className="inquire-btn">Send Inquiry</button>
-              </div>
             </div>
             
             <div className="agent-sidebar">
@@ -213,18 +205,17 @@ const PropertyDetails = () => {
                     <div className="agent-profile">
                       <div className="agent-image">
                         <img 
-                          src={agent.profile_pic || 'https://via.placeholder.com/150?text=Agent'} 
+                          src={agent.profile_pic || 'https://cdn-icons-png.flaticon.com/512/69/69889.png'} 
                           alt={agent.name || 'Agent'} 
                           onError={(e) => {
                             e.target.onerror = null;
-                            e.target.src = 'https://via.placeholder.com/150?text=Agent';
+                            e.target.src = 'https://cdn-icons-png.flaticon.com/512/69/69889.png';
                           }}
                         />
                       </div>
                       <div className="agent-info">
                         <h3>{agent.name || 'Agent'}</h3>
                         <p className="agent-title">Real Estate Agent</p>
-                        <p className="agent-experience">{agent.experience || 'Experience: N/A'}</p>
                       </div>
                     </div>
                     <div className="agent-contact">
@@ -237,33 +228,45 @@ const PropertyDetails = () => {
                         <span>{agent.phone_number || 'N/A'}</span>
                       </div>
                     </div>
-                    <div className="agent-bio">
-                      <h4>About the Agent</h4>
-                      <p>{agent.bio || 'No agent biography available.'}</p>
-                    </div>
-                    <button className="contact-agent-button">Contact Agent</button>
+                    {console.log('Debug values:', {
+                      propertyAgentId: property.agents_id,
+                      userId: user.id,
+                      userRole: user.role,
+                      isUserAgent: user.role === 'agent',
+                      isPropertyOwnedByUser: user.role === 'agent' && Number(property.agents_id) === Number(user.id)
+                    })}
+                    {!(user.role === 'agent' && Number(property.agents_id) === Number(user.id)) && (
+                    <button 
+                      className="contact-agent-button"
+                      onClick={handleInquiryButtonClick}
+                    >
+                      Contact Agent
+                    </button>
+                    )}
                   </>
                 ) : (
                   <p>Agent information not available</p>
                 )}
               </div>
               
-              <div className="quick-tools">
-                <h3>Quick Tools</h3>
-                <button className="tool-button">
-                  <i className="tool-icon">🖨️</i> Print Listing
-                </button>
-                <button className="tool-button">
-                  <i className="tool-icon">🔗</i> Share Listing
-                </button>
-                <button className="tool-button">
-                  <i className="tool-icon">❤️</i> Save to Favorites
-                </button>
-              </div>
+          
             </div>
           </div>
         </div>
       </div>
+      
+      {showInquiryForm && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <PropertyInquiryForm 
+              Idproperty={id}
+              propertyTitle={property.title}
+              onSuccess={handleInquirySuccess}
+              onCancel={() => setShowInquiryForm(false)}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

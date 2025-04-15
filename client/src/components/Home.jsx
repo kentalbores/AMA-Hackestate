@@ -2,9 +2,12 @@ import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import './Home.css';
+import Navbar from './Navbar';
 
 const Home = () => {
   const [user, setUser] = useState(null);
+  const [notifications, setNotifications] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -19,6 +22,7 @@ const Home = () => {
         const response = await axios.get('http://localhost:3000/api/users/me', {
           headers: { Authorization: `Bearer ${token}` },
         });
+        console.log('User data loaded:', response.data);
         setUser(response.data);
       } catch (error) {
         console.error('Error fetching user data:', error);
@@ -27,12 +31,60 @@ const Home = () => {
       }
     };
 
-    fetchUserData();
+    const fetchNotifications = async () => {
+      try {
+        console.log('Fetching notifications for dashboard...');
+        const response = await axios.get('http://localhost:3000/api/notifications', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        console.log('Notifications received:', response.data);
+        setNotifications(response.data);
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Error fetching notifications:', error);
+        setIsLoading(false);
+      }
+    };
+
+    fetchUserData()
+      .then(() => fetchNotifications())
+      .catch(err => {
+        console.error('Error in initial data loading:', err);
+        setIsLoading(false);
+      });
+
+    // Set up a refresh interval for notifications
+    const refreshInterval = setInterval(() => {
+      fetchNotifications().catch(err => 
+        console.error('Error refreshing notifications:', err)
+      );
+    }, 10000); // Every 10 seconds
+
+    return () => clearInterval(refreshInterval);
   }, [navigate]);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
     navigate('/login');
+  };
+
+  const handleRefresh = () => {
+    setIsLoading(true);
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    axios.get('http://localhost:3000/api/notifications', {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(response => {
+        console.log('Manually refreshed notifications:', response.data);
+        setNotifications(response.data);
+        setIsLoading(false);
+      })
+      .catch(error => {
+        console.error('Error refreshing notifications:', error);
+        setIsLoading(false);
+      });
   };
 
   if (!user) {
@@ -45,16 +97,7 @@ const Home = () => {
 
   return (
     <div className="home-container">
-      <nav className="navigation">
-        <ul>
-          <li><Link to="/home" className="nav-link">Dashboard</Link></li>
-          <li><Link to="/properties" className="nav-link">Properties</Link></li>
-          <li><Link to="/listings" className="nav-link">My Listings</Link></li>
-          <li><Link to="/leads" className="nav-link">Leads</Link></li>
-          <li><Link to="/analytics" className="nav-link">Analytics</Link></li>
-          <li><Link to="/profile" className="nav-link">My Profile</Link></li>
-        </ul>
-      </nav>
+      <Navbar user={user} activePage="dashboard" />
 
       <header className="dashboard-header">
         <h1>Welcome, {user.name}</h1>
@@ -80,11 +123,50 @@ const Home = () => {
           </div>
         </section>
 
+        {user.role === 'agent' && (
+          <section className="recent-notifications">
+            <div className="section-header">
+              <h2>Recent Inquiries</h2>
+              <button onClick={handleRefresh} className="refresh-button" disabled={isLoading}>
+                {isLoading ? 'Refreshing...' : 'Refresh'}
+              </button>
+            </div>
+            <div className="notification-cards">
+              {notifications.length === 0 ? (
+                <div className="empty-notification-message">
+                  <p>No inquiries yet. They will appear here when buyers send property inquiries.</p>
+                </div>
+              ) : (
+                <>
+                  {notifications.slice(0, 3).map(notification => (
+                    <div key={notification.id} className="notification-card">
+                      <div className="notification-icon">
+                        {notification.type === 'property_inquiry' ? '📧' : 
+                         notification.type === 'property_purchase' ? '🏠' : 
+                         notification.type === 'system' ? '⚙️' : '📢'}
+                      </div>
+                      <div className="notification-details">
+                        <p className="notification-message">{notification.message}</p>
+                        <span className="notification-time">
+                          {new Date(notification.created_at).toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </>
+              )}
+            </div>
+          </section>
+        )}
+
         <section className="welcome-message">
           <h2>Real Estate Dashboard</h2>
           <p>Monitor your listings, track buyer inquiries, and manage appointments all in one place.</p>
           <div className="action-buttons">
             <Link to="/properties" className="action-button">Browse Properties</Link>
+            {user.role === 'agent' && (
+              <Link to="/listings" className="action-button">Manage Listings</Link>
+            )}
             <Link to="/profile" className="action-button profile-action">Update Profile</Link>
           </div>
         </section>

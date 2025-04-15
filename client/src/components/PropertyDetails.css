@@ -53,9 +53,11 @@
 }
 
 .property-price {
-  font-size: 24px;
-  font-weight: 700;
-  color: #4a6ee0;
+  display: flex;
+  align-items: center;
+  color: #666;
+  margin-bottom: 12px;
+  font-size: 16px;
 }
 
 .property-images {
@@ -355,4 +357,137 @@
 
 .error-container button:hover, .not-found-container button:hover {
   background-color: #3a5dcf;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  width: 100%;
+  max-width: 500px;
+  animation: modal-fade-in 0.3s ease-out;
+}
+
+@keyframes modal-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.user-actions {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.navigation {
+  display: flex;
+  justify-content: space-between;
+  padding: 15px 20px;
+  background-color: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.navigation ul {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.navigation li {
+  margin-right: 20px;
+}
+
+.nav-link {
+  text-decoration: none;
+  color: #333;
+  font-weight: 500;
+  padding: 5px;
+  transition: color 0.2s;
+}
+
+.nav-link:hover {
+  color: #e74c3c;
+}
+
+.nav-brand {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #e74c3c;
+}
+
+.user-name {
+  font-weight: 500;
+}
+
+.logout-button {
+  background-color: transparent;
+  border: 1px solid #e74c3c;
+  color: #e74c3c;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.logout-button:hover {
+  background-color: #e74c3c;
+  color: white;
+}
+
+.inquire-btn, 
+.schedule-viewing-btn,
+.contact-agent-button {
+  padding: 12px 20px;
+  border: none;
+  border-radius: 4px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.inquire-btn {
+  background-color: #3498db;
+  color: white;
+}
+
+.inquire-btn:hover {
+  background-color: #2980b9;
+}
+
+.schedule-viewing-btn {
+  background-color: #e74c3c;
+  color: white;
+  margin-right: 10px;
+}
+
+.schedule-viewing-btn:hover {
+  background-color: #c0392b;
+}
+
+.contact-agent-button {
+  background-color: #e74c3c;
+  color: white;
+  width: 100%;
+  margin-top: 15px;
+}
+
+.contact-agent-button:hover {
+  background-color: #c0392b;
 } 

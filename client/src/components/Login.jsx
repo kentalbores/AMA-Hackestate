@@ -9,6 +9,8 @@ const Login = () => {
     name: '',
     email: '',
     password: '',
+    phone_number: '',
+    role: 'buyer'
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -37,6 +39,10 @@ const Login = () => {
     }
     if (!formData.password.trim()) {
       setError('Password is required');
+      return false;
+    }
+    if (isSignUp && !formData.phone_number.trim()) {
+      setError('Phone number is required');
       return false;
     }
     // Basic email validation
@@ -70,16 +76,20 @@ const Login = () => {
         const response = await axios.post('http://localhost:3000/api/users', {
           name: formData.name.trim(),
           email: formData.email.trim().toLowerCase(),
-          password: formData.password
+          password: formData.password,
+          phone_number: formData.phone_number.trim(),
+          role: formData.role
         });
 
-        if (response.data.message) {
-          setSuccess(response.data.message);
+        if (response.data) {
+          setSuccess('Account created successfully! You can now log in.');
           // Clear form
           setFormData({
             name: '',
             email: '',
-            password: ''
+            password: '',
+            phone_number: '',
+            role: 'buyer'
           });
           // Switch to login after success
           setTimeout(() => {
@@ -88,13 +98,19 @@ const Login = () => {
         }
       } else {
         // Login
-        const response = await axios.post('http://localhost:3000/api/auth/login', {
+        const response = await axios.post('http://localhost:3000/api/users/login', {
           email: formData.email.trim().toLowerCase(),
           password: formData.password
         });
 
         if (response.data.token) {
           localStorage.setItem('token', response.data.token);
+          localStorage.setItem('user', JSON.stringify({
+            id: response.data.id,
+            name: response.data.name,
+            email: response.data.email,
+            role: response.data.role
+          }));
           navigate('/home');
         }
       }
@@ -117,6 +133,8 @@ const Login = () => {
       name: '',
       email: '',
       password: '',
+      phone_number: '',
+      role: 'buyer'
     });
   };
 
@@ -179,6 +197,25 @@ const Login = () => {
               onChange={handleChange}
               required
             />
+            <input
+              type="tel"
+              name="phone_number"
+              placeholder="Phone Number"
+              value={formData.phone_number}
+              onChange={handleChange}
+              required
+            />
+            <div className="select-wrapper">
+              <select
+                name="role"
+                value={formData.role}
+                onChange={handleChange}
+                required
+              >
+                <option value="buyer">Buyer</option>
+                <option value="agent">Agent</option>
+              </select>
+            </div>
             <button type="submit" disabled={loading}>
               {loading ? 'Signing up...' : 'Sign Up'}
             </button>
