@@ -1,7 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { PDFDocument } from 'pdf-lib';
-import { QRCodeCanvas } from 'qrcode.react';
 import './InquiryChat.css';
 
 const InquiryChat = ({ inquiry, user, onMessageSent }) => {
@@ -13,9 +11,7 @@ const InquiryChat = ({ inquiry, user, onMessageSent }) => {
   const [propertyDetails, setPropertyDetails] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
   const [uploading, setUploading] = useState(false);
-  const [processingApproval, setProcessingApproval] = useState(false);
   const fileInputRef = useRef(null);
-  const qrRef = useRef(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -429,181 +425,6 @@ const InquiryChat = ({ inquiry, user, onMessageSent }) => {
     window.open(`/document-viewer?${queryParams.toString()}`, '_blank');
   };
 
-  // Process PDF with QR code
-  const processPdfWithQr = async (file, contractId, fileName) => {
-    try {
-      setProcessingApproval(true);
-      
-      // Create a QR code with the document viewer URL
-      const qrValue = `http://localhost:5173/document-viewer?contractId=${contractId}&fileName=${fileName}`;
-      
-      // Create a hidden QR code canvas element if it doesn't exist
-      if (!qrRef.current) {
-        const qrDiv = document.createElement('div');
-        qrDiv.style.display = 'none';
-        document.body.appendChild(qrDiv);
-        qrRef.current = qrDiv;
-        
-        // Create QR code canvas
-        const qrCanvas = document.createElement('canvas');
-        qrRef.current.appendChild(qrCanvas);
-        new QRCodeCanvas({
-          value: qrValue,
-          size: 256,
-          level: 'H',
-          renderAs: 'canvas',
-          container: qrCanvas
-        });
-      } else {
-        // Update existing QR code
-        const qrCanvas = qrRef.current.querySelector('canvas');
-        if (qrCanvas) {
-          qrRef.current.removeChild(qrCanvas);
-        }
-        
-        const newCanvas = document.createElement('canvas');
-        qrRef.current.appendChild(newCanvas);
-        new QRCodeCanvas({
-          value: qrValue,
-          size: 256,
-          level: 'H',
-          renderAs: 'canvas',
-          container: newCanvas
-        });
-      }
-
-      // Get file URL from the server
-      const fileUrl = `http://localhost:3000/api/contracts/${contractId}/pdf`;
-      
-      // Fetch the PDF
-      const pdfResponse = await fetch(fileUrl);
-      const existingPdfBytes = await pdfResponse.arrayBuffer();
-      
-      // Get QR code as PNG from canvas
-      const canvas = qrRef.current.querySelector('canvas');
-      const qrImageUrl = canvas.toDataURL('image/png');
-      
-      // Fetch the QR code image
-      const qrImageResponse = await fetch(qrImageUrl);
-      const qrImageBytes = await qrImageResponse.arrayBuffer();
-      
-      // Load the PDF document
-      const pdfDoc = await PDFDocument.load(existingPdfBytes);
-      
-      // Embed the QR code image
-      const qrImage = await pdfDoc.embedPng(qrImageBytes);
-      const qrDims = qrImage.scale(0.15);
-      
-      // Add QR code to each page
-      const pages = pdfDoc.getPages();
-      pages.forEach(page => {
-        const position = calculateQRPosition(page, qrDims);
-        page.drawImage(qrImage, {
-          x: position.x,
-          y: position.y,
-          width: qrDims.width,
-          height: qrDims.height,
-        });
-      });
-      
-      // Save the modified PDF
-      const modifiedPdfBytes = await pdfDoc.save();
-      
-      // Create blob and URL for the modified PDF
-      const blob = new Blob([modifiedPdfBytes], { type: 'application/pdf' });
-      const modifiedFile = new File([blob], fileName, { type: 'application/pdf' });
-      
-      // Upload the modified PDF
-      const formData = new FormData();
-      formData.append('pdf', modifiedFile);
-      formData.append('contractId', contractId);
-      
-      const token = localStorage.getItem('token');
-      await axios.post(
-        'http://localhost:3000/api/contracts/upload-pdf',
-        formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            Authorization: `Bearer ${token}`
-          }
-        }
-      );
-      
-      // Update contract status to approved
-      await axios.put(`http://localhost:3000/api/contracts/${contractId}`, {
-        status: 'approved',
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      // Send approval confirmation message
-      await axios.post(
-        `http://localhost:3000/api/inquiries/${inquiry.id}/messages`,
-        {
-          message: `I've approved the document: ${fileName}`,
-          file_url: fileUrl,
-          file_name: fileName,
-          contract_id: contractId,
-          approved: true
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` }
-        }
-      );
-      
-      // Refresh the messages
-      const messagesResponse = await axios.get(
-        `http://localhost:3000/api/inquiries/${inquiry.id}/messages`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      
-      setMessages(messagesResponse.data);
-      
-      // Navigate to document viewer page
-      window.open(`/document-viewer?contractId=${contractId}&fileName=${fileName}`, '_blank');
-      
-    } catch (error) {
-      console.error('Error processing PDF with QR code:', error);
-      setError('Failed to process document approval. Please try again.');
-    } finally {
-      setProcessingApproval(false);
-    }
-  };
-  
-  // Calculate QR position on page
-  const calculateQRPosition = (page, qrDims) => {
-    // Get page dimensions
-    const { width: pageWidth, height: pageHeight } = page.getSize();
-    
-    // Define margins (in points)
-    const margin = 20;
-    
-    // Return position for top right corner
-    return {
-      x: pageWidth - qrDims.width - margin,
-      y: pageHeight - qrDims.height - margin
-    };
-  };
-  
-  // Handle document approval
-  const handleApproveDocument = async (message) => {
-    const contractId = getContractIdFromMessage(message);
-    const fileName = getFileNameFromMessage(message);
-    
-    if (!contractId) {
-      setError('Cannot approve document: Missing contract ID');
-      return;
-    }
-    
-    try {
-      await processPdfWithQr(null, contractId, fileName);
-    } catch (error) {
-      console.error('Error approving document:', error);
-      setError('Failed to approve document. Please try again.');
-    }
-  };
-
   if (loading && messages.length === 0) {
     return (
       <div className="inquiry-chat">
@@ -648,7 +469,6 @@ const InquiryChat = ({ inquiry, user, onMessageSent }) => {
               {messagesForDate.map(message => {
                 const isSentByCurrentUser = message.sender_id === user?.id;
                 const isFile = isFileMessage(message);
-                const canApprove = !isSentByCurrentUser && isFile && user?.role === 'buyer' && !message.approved;
                 
                 return (
                   <div 
@@ -695,24 +515,6 @@ const InquiryChat = ({ inquiry, user, onMessageSent }) => {
                             >
                               📥
                             </button>
-                            {canApprove && (
-                              <button
-                                className="file-approve-btn"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleApproveDocument(message);
-                                }}
-                                disabled={processingApproval}
-                                title="Approve document"
-                              >
-                                {processingApproval ? "Processing..." : "✓ Approve"}
-                              </button>
-                            )}
-                            {message.approved && (
-                              <div className="file-approved-badge" title="Document approved">
-                                ✓ Approved
-                              </div>
-                            )}
                           </div>
                         </div>
                       ) : (
@@ -728,11 +530,6 @@ const InquiryChat = ({ inquiry, user, onMessageSent }) => {
           ))
         )}
         <div ref={messagesEndRef} />
-      </div>
-      
-      {/* Hidden div for QR code generation */}
-      <div style={{ display: 'none' }} ref={qrRef}>
-        <QRCodeCanvas value="" size={256} />
       </div>
       
       <form onSubmit={handleSubmit} className="message-input-form">
@@ -772,12 +569,12 @@ const InquiryChat = ({ inquiry, user, onMessageSent }) => {
           onChange={(e) => setNewMessage(e.target.value)}
           placeholder={selectedFile ? "Send with file..." : "Type your message..."}
           className="message-input"
-          disabled={uploading || processingApproval}
+          disabled={uploading}
         />
         <button 
           type="submit" 
           className="send-button"
-          disabled={uploading || processingApproval || (!newMessage.trim() && !selectedFile)}
+          disabled={uploading || (!newMessage.trim() && !selectedFile)}
         >
           {uploading ? "Uploading..." : "Send"}
         </button>
