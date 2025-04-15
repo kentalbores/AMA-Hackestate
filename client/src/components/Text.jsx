@@ -149,82 +149,102 @@ const Text = () => {
   };
 
   return (
-    <div className="container mx-auto p-4 flex gap-4">
-      <div className="w-1/2">
-        <h1 className="text-2xl font-bold mb-4">Upload Contract</h1>
-        <div className="max-w-md">
-          <div className="mb-4">
+    <div className="app-container">
+      <div className="sidebar">
+        <div className="sidebar-header">
+          <h2>Contract Analysis</h2>
+        </div>
+        <div className="upload-section">
+          <h3>Upload Contract</h3>
+          <div className="file-input-container">
             <input
               type="file"
               accept=".pdf"
               onChange={handleFileChange}
-              className="block w-full text-sm text-gray-500
-                file:mr-4 file:py-2 file:px-4
-                file:rounded-full file:border-0
-                file:text-sm file:font-semibold
-                file:bg-blue-50 file:text-blue-700
-                hover:file:bg-blue-100"
+              className="file-input"
+              id="file-input"
             />
+            <label htmlFor="file-input" className="file-label">
+              {file ? file.name : 'Choose PDF file'}
+            </label>
           </div>
-          {error && <p className="text-red-500 mb-4">{error}</p>}
-          {uploadStatus && <p className="text-green-500 mb-4">{uploadStatus}</p>}
+          {error && <p className="error-message">{error}</p>}
+          {uploadStatus && <p className="success-message">{uploadStatus}</p>}
           <button
             onClick={handleUpload}
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+            className="upload-button"
+            disabled={!file}
           >
-            Upload
+            Upload Contract
           </button>
         </div>
       </div>
 
-      <div className="w-1/2">
+      <div className="chat-container">
         <div className="chat-box">
-          <div className="chat-header">
-            <h3>Contract Analysis Assistant</h3>
-          </div>
           <div className="messages-container">
             {messages.map((message, index) => (
               <div 
                 key={index} 
-                className={`message ${message.sender === 'user' ? 'user-message' : 'bot-message'}`}
+                className={`message-wrapper ${message.sender === 'user' ? 'user-wrapper' : 'bot-wrapper'}`}
               >
-                <div className="message-content">
-                  {message.text}
+                <div className="message-avatar">
+                  {message.sender === 'user' ? 'U' : 'A'}
                 </div>
-                <div className="message-timestamp">
-                  {new Date(message.timestamp).toLocaleTimeString([], { 
-                    hour: '2-digit', 
-                    minute: '2-digit' 
-                  })}
+                <div className="message-content-wrapper">
+                  <div className="message-content">
+                    {message.text}
+                  </div>
+                  <div className="message-timestamp">
+                    {new Date(message.timestamp).toLocaleTimeString([], { 
+                      hour: '2-digit', 
+                      minute: '2-digit' 
+                    })}
+                  </div>
                 </div>
               </div>
             ))}
             {isAnalyzing && (
-              <div className="analyzing-message bot-message">
-                <div className="message-content">
-                  Analyzing your contract... Please wait...
+              <div className="message-wrapper bot-wrapper">
+                <div className="message-avatar">A</div>
+                <div className="message-content-wrapper">
+                  <div className="message-content analyzing">
+                    <div className="typing-indicator">
+                      <span></span>
+                      <span></span>
+                      <span></span>
+                    </div>
+                    Analyzing your contract...
+                  </div>
                 </div>
               </div>
             )}
             <div ref={messagesEndRef} />
           </div>
-          <form onSubmit={handleSubmit} className="message-input-container">
-            <input
-              type="text"
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              placeholder="Ask about the contract..."
-              className="message-input"
-              disabled={isAnalyzing}
-            />
-            <button 
-              type="submit" 
-              className="send-button"
-              disabled={isAnalyzing}
-            >
-              Send
-            </button>
-          </form>
+          <div className="input-container">
+            <form onSubmit={handleSubmit} className="message-form">
+              <input
+                type="text"
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                placeholder="Ask about the contract..."
+                className="message-input"
+                disabled={isAnalyzing}
+              />
+              <button 
+                type="submit" 
+                className="send-button"
+                disabled={isAnalyzing || !newMessage.trim()}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="send-icon">
+                  <path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" />
+                </svg>
+              </button>
+            </form>
+            <div className="input-footer">
+              Contract Analysis Assistant powered by AI
+            </div>
+          </div>
         </div>
       </div>
     </div>
