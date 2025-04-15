@@ -139,6 +139,29 @@ const Home = () => {
             </div>
           )}
           
+          {user.role === 'admin' && (
+            <div className="summary-card">
+              <h2>Administration Overview</h2>
+              <div className="activity-summary">
+                <div className="activity-item">
+                  <span className="activity-icon">🔔</span>
+                  <span>5 items requiring verification</span>
+                </div>
+                <div className="activity-item">
+                  <span className="activity-icon">🏠</span>
+                  <span>2 new properties submitted</span>
+                </div>
+                <div className="activity-item">
+                  <span className="activity-icon">👤</span>
+                  <span>3 new agent registrations</span>
+                </div>
+                <div className="activity-item">
+                  <span className="activity-icon">⚠️</span>
+                  <span>1 reported listing</span>
+                </div>
+              </div>
+            </div>
+          )}
           
         </section>
 
@@ -178,6 +201,107 @@ const Home = () => {
           </section>
         )}
 
+        {user.role === 'admin' && (
+          <section className="admin-verification-section">
+            <div className="admin-panel-row">
+              <div className="admin-panel">
+                <div className="section-header">
+                  <h2>Properties Pending Verification</h2>
+                  <button onClick={handleRefresh} className="refresh-button" disabled={isLoading}>
+                    {isLoading ? 'Refreshing...' : 'Refresh'}
+                  </button>
+                </div>
+                <div className="verification-cards">
+                  <div className="verification-card">
+                    <div className="verification-icon">🏠</div>
+                    <div className="verification-details">
+                      <h3>Luxury Villa with Ocean View</h3>
+                      <p>4 bed, 3 bath • $1,250,000</p>
+                      <p className="verification-agent">Listed by: John Smith</p>
+                      <p className="verification-date">Submitted: {new Date().toLocaleDateString()}</p>
+                      <div className="verification-actions">
+                        <button className="verify-button">✓ Verify</button>
+                        <button className="reject-button">✕ Reject</button>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="verification-card">
+                    <div className="verification-icon">🏢</div>
+                    <div className="verification-details">
+                      <h3>Downtown Penthouse Apartment</h3>
+                      <p>2 bed, 2 bath • $850,000</p>
+                      <p className="verification-agent">Listed by: Sarah Johnson</p>
+                      <p className="verification-date">Submitted: {new Date().toLocaleDateString()}</p>
+                      <div className="verification-actions">
+                        <button className="verify-button">✓ Verify</button>
+                        <button className="reject-button">✕ Reject</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="admin-panel">
+                <div className="section-header">
+                  <h2>Agents Pending Verification</h2>
+                </div>
+                <div className="verification-cards">
+                  <div className="verification-card">
+                    <div className="verification-icon">👤</div>
+                    <div className="verification-details">
+                      <h3>Michael Rodriguez</h3>
+                      <p>License #: CAL-12345678</p>
+                      <p>Agency: Prestige Real Estate</p>
+                      <p className="verification-date">Registered: {new Date().toLocaleDateString()}</p>
+                      <div className="verification-actions">
+                        <button className="verify-button">✓ Verify</button>
+                        <button className="reject-button">✕ Reject</button>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="verification-card">
+                    <div className="verification-icon">👤</div>
+                    <div className="verification-details">
+                      <h3>Jennifer Williams</h3>
+                      <p>License #: CAL-87654321</p>
+                      <p>Agency: HomeFind Realtors</p>
+                      <p className="verification-date">Registered: {new Date().toLocaleDateString()}</p>
+                      <div className="verification-actions">
+                        <button className="verify-button">✓ Verify</button>
+                        <button className="reject-button">✕ Reject</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="admin-stats-row">
+              <div className="admin-stat-card">
+                <div className="admin-stat-icon">✓</div>
+                <div className="admin-stat-details">
+                  <h3>15</h3>
+                  <p>Properties Verified This Month</p>
+                </div>
+              </div>
+              <div className="admin-stat-card">
+                <div className="admin-stat-icon">👤</div>
+                <div className="admin-stat-details">
+                  <h3>8</h3>
+                  <p>Agents Verified This Month</p>
+                </div>
+              </div>
+              <div className="admin-stat-card">
+                <div className="admin-stat-icon">⏱️</div>
+                <div className="admin-stat-details">
+                  <h3>5</h3>
+                  <p>Pending Verifications</p>
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+
         <section className="dashboard-info">
           <div className="info-card">
             <h3>Platform Updates</h3>
@@ -192,13 +316,39 @@ const Home = () => {
           </div>
           
           <div className="info-card">
-            <h3>Tips & Tricks</h3>
-            <ul className="tips-list">
-              <li>Use the document viewer to easily review contracts</li>
-              <li>Enable notifications to stay updated on new inquiries</li>
-              <li>Complete your profile to improve visibility</li>
-            </ul>
+            {user.role === 'admin' ? (
+              <>
+                <h3>Admin Resources</h3>
+                <ul className="tips-list">
+                  <li>Use the verification tools to approve or reject new property listings</li>
+                  <li>Verify agent credentials before approving their accounts</li>
+                  <li>Check reported listings within 24 hours of submission</li>
+                  <li>Access the admin analytics panel for system usage statistics</li>
+                </ul>
+              </>
+            ) : (
+              <>
+                <h3>Tips & Tricks</h3>
+                <ul className="tips-list">
+                  <li>Use the document viewer to easily review contracts</li>
+                  <li>Enable notifications to stay updated on new inquiries</li>
+                  <li>Complete your profile to improve visibility</li>
+                </ul>
+              </>
+            )}
           </div>
+          
+          {user.role === 'admin' && (
+            <div className="info-card">
+              <h3>Verification Guidelines</h3>
+              <ul className="tips-list">
+                <li>Property listings must include clear photos and accurate details</li>
+                <li>Agent licenses must be valid and verifiable with local authorities</li>
+                <li>Reported content should be reviewed with the content policy guidelines</li>
+                <li>All verifications should be completed within 48 hours of submission</li>
+              </ul>
+            </div>
+          )}
         </section>
       </main>
     </div>
