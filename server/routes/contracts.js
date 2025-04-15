@@ -6,6 +6,7 @@ const axios = require('axios');
 const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
+const pdf = require('pdf-parse');
 
 
 db.prepare(`
@@ -31,6 +32,33 @@ router.get('/', (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
+
+
+async function extractTextFromPDF(filePath) {
+  try {
+      const dataBuffer = fs.readFileSync(filePath);
+      const data = await pdf(dataBuffer);
+      return data.text;
+  } catch (error) {
+      console.error('Error extracting PDF text:', error);
+      throw error;
+  }
+}
+
+router.get('/test', async (req, res) => {
+  try {
+    const filePath = path.join(__dirname, '..', 'contracts_files', '1744612705419-159912386-dummy.pdf');
+    console.log('Attempting to read file at:', filePath);
+    
+    const text = await extractTextFromPDF(filePath);
+    res.status(200).json({ text });
+  } catch (error) {
+    console.error('Error analyzing contract:', error);
+    res.status(500).json({ error: 'Failed to analyze contract' });
+  }
+});
+
+
 
 router.get('/:id', (req, res) => {
     try {
@@ -144,17 +172,21 @@ router.get('/property/:propertyId', (req, res) => {
 });
 
 
-async function analyzeContract(contract) {
+async function analyzeContract(extractedText) {
     const prompt = `
-      You are a real estate expert. You are given a pdf file of a contract created by a real estate agent. 
-      Assist the buyer in summarizing/explaining the contract details. 
-      Provide a detailed explanation of the contract, including the terms, conditions, and any other relevant information.
+      You are a real estate expert. You are given a contract text created by a real estate agent. 
+      Assist the user in summarizing/explaining the contract details. 
+      You are to provide a detailed explanation of any questions the buyer has about the contract, including the terms, conditions, and any other relevant information.
       If you feel that the contract is not disadvantageous to the buyer, you should suggest renegotiating the terms
       and provide a detailed revision that would be fair for both parties.
-      The contract is in the form of a pdf file.
-      Here is the text content inside the pdf file: ${contract}
+      Here is the contract text: ${extractedText}
+
+      but briefly greet the user first and introduce yourself as a real estate ai then wait for the user to ask a question
     `;
-    console.log(contract);
+  
+    // const prompt = `
+    //   hi
+    // `
     try {
       const response = await axios.post(
         "https://openrouter.ai/api/v1/chat/completions",
@@ -271,30 +303,26 @@ router.get('/:id/pdf', (req, res) => {
   }
 });
 
+
+
+
+
+
 // New route to analyze a contract by ID
 router.get('/:id/analyze', async (req, res) => {
   try {
     // Get the contract from the database
-    const contract = db.prepare('SELECT * FROM contracts WHERE id = ?').get(req.params.id);
+    // const contract = db.prepare('SELECT * FROM contracts WHERE id = ?').get(req.params.id);
     
-    if (!contract) {
-      return res.status(404).json({ error: 'Contract not found' });
-    }
+    // if (!contract) {
+    //   return res.status(404).json({ error: 'Contract not found' });
+    // }
 
-    // Get the file path
-    const filePath = contract.contract_detail;
+    const filePath = path.join(__dirname, '..', 'contracts_files', '1744612705419-159912386-dummy.pdf');
+    console.log('Attempting to read file at:', filePath);
     
-    if (!fs.existsSync(filePath)) {
-      return res.status(404).json({ error: 'PDF file not found' });
-    }
-
-    // Read the PDF file content
-    // Note: This is a simplified approach. In a production environment,
-    // you would use a PDF parsing library to extract text from the PDF
-    const fileContent = fs.readFileSync(filePath, 'utf8');
-    
-    // Analyze the contract
-    const analysis = await analyzeContract(fileContent);
+    const text = await extractTextFromPDF(filePath);
+    const analysis = await analyzeContract(text);
     
     res.json({ analysis });
   } catch (error) {
