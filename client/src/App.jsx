@@ -10,6 +10,7 @@ import PropertyListing from './components/PropertyListing';
 import PropertyDetails from './components/PropertyDetails';
 import AgentListings from './components/AgentListings';
 import Inquiries from './components/Inquiries';
+import Sos from './components/SOS';
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
         <Route path="/listings" element={<AgentListings />} />
         <Route path="/inquiries" element={<Inquiries />} />
         <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/sos" element={<Sos />} />
       </Routes>
     </Router>
   );

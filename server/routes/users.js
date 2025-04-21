@@ -158,28 +158,21 @@ router.post('/login', async (req, res) => {
   const { email, password } = req.body;
   
   try {
-    // Find user by email
     const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
     
     if (!user) {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
-    
-    // Compare password
     const isPasswordValid = await bcrypt.compare(password, user.password);
     
     if (!isPasswordValid) {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
-    
-    // Generate JWT token
     const token = jwt.sign(
       { userId: user.id, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
-    
-    // Return user info and token
     res.json({
       id: user.id,
       name: user.name,
